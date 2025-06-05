@@ -124,6 +124,19 @@ input.input-error {
   background: #ffe7e7 !important;
   animation: shake 0.4s;
 }
+
+.modal-inner {
+  background: #fff;
+  padding: 1.2em;
+  border-radius: 20px;
+  max-width: 350px;
+  width: 95%;
+  box-shadow: var(--shadow);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+    
 @keyframes shake {
   0% { transform: translateX(0px);}
   20% { transform: translateX(-5px);}
@@ -132,6 +145,7 @@ input.input-error {
   80% { transform: translateX(4px);}
   100% { transform: translateX(0px);}
 }
+
     
     /* EXPAND ON OLD PHONES */
     @media (max-width: 400px) {
