@@ -461,22 +461,31 @@ function resetAllData() {
     closeModal(); renderApp();
   }
 }
+const APP_VERSION = "1.0.0 (2024-06-05)"; // версию и дату обновления всегда видно
+
 function showAbout() {
   let html = `
-    <b>Трекер рабочего времени</b><br>
-    <div class="small">
-    Автор: <a href="https://github.com/" target="_blank">github.com/</a> <br>
-    Версия: ✨ MVP 2024 ✨<br>
-    Все данные только на вашем устройстве.<br>
-    <br>
-    Используйте для учёта реального рабочего времени.<br>
-    <br>
-    <button class="btn" onclick="closeModal()">Понятно</button>
+    <b>О приложении</b><br>
+    <div class="small" style="line-height:1.7;">
+      <b>Автор:</b> Антон Магомедов<br>
+      <b>Telegram / Instagram:</b> <a href="https://t.me/xcve33" target="_blank">@xcve33</a><br>
+      <b>Email:</b> <a href="mailto:akitsatnafiya@gmail.com">akitsatnafiya@gmail.com</a><br>
+      <b>GitHub:</b> <a href="https://github.com/sunpole" target="_blank">sunpole</a><br>
+      <br>
+      <b>Версия:</b> ${APP_VERSION}<br>
+      <b>Назначение:</b><br>
+      Трекер учёта времени — для ежедневной фиксации прихода, ухода и видов деятельности по тегам.<br>
+      <br>
+      <b>Особенности:</b><br>
+      — Все данные хранятся только на вашем устройстве (LocalStorage браузера)<br>
+      — Не требует регистрации и интернета<br>
+      — Можно экспортировать отчёты в текст для пересылки<br>
+      <br>
+      <button class="btn" onclick="closeModal()">Понятно</button>
     </div>
   `;
   showModal(html);
 }
-
 function showModal(html) {
   let m = document.getElementById("modal");
   m.innerHTML = `<div class="modal" onclick="closeModal(event)">
