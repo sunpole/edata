@@ -461,16 +461,21 @@ function resetAllData() {
     closeModal(); renderApp();
   }
 }
+
 const APP_VERSION = "1.0.0 (2024-06-05)"; // версию и дату обновления всегда видно
 
 function showAbout() {
   let html = `
     <b>О приложении</b><br>
     <div class="small" style="line-height:1.7;">
-      <b>Автор:</b> Антон Магомедов<br>
+      <b>Автор идеи:</b> Антон Магомедов<br>
       <b>Telegram / Instagram:</b> <a href="https://t.me/xcve33" target="_blank">@xcve33</a><br>
       <b>Email:</b> <a href="mailto:akitsatnafiya@gmail.com">akitsatnafiya@gmail.com</a><br>
       <b>GitHub:</b> <a href="https://github.com/sunpole" target="_blank">sunpole</a><br>
+      <br>
+      <b>Разработка кода:</b><br>
+      Программный код создан с помощью искусственного интеллекта — чат-ассистента <a href="https://www.sider.ai/" target="_blank">sider.ai</a>, на основе серии промтов и требований от автора.<br>
+      Минимальное ручное редактирование — честно и ради эксперимента с AI.<br>
       <br>
       <b>Версия:</b> ${APP_VERSION}<br>
       <b>Назначение:</b><br>
@@ -481,11 +486,16 @@ function showAbout() {
       — Не требует регистрации и интернета<br>
       — Можно экспортировать отчёты в текст для пересылки<br>
       <br>
-      <button class="btn" onclick="closeModal()">Понятно</button>
+      <b>Всегда открыт для контакта и сотрудничества.</b><br>
+      Любая ваша поддержка, отзыв или предложение очень ценны для меня.<br>
+      <br>
+      <button class="btn" style="font-size:0.98em;white-space:normal;line-height:1.1;padding:0.7em 1em;" onclick="closeModal()">Спасибо за ваше внимание</button>
     </div>
   `;
   showModal(html);
 }
+
+
 function showModal(html) {
   let m = document.getElementById("modal");
   m.innerHTML = `<div class="modal" onclick="closeModal(event)">
