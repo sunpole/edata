@@ -284,16 +284,17 @@ function markNow(type) {
   saveAll(); renderApp();
 }
 
-
 function openManualTime(type) {
   let dt = todayStr();
   let day = findDay(dt) || { date: dt, start: '', end: '', tags: [] };
 
   // Значение по умолчанию: текущее или уже выбранное
-  let val = (day[type] && /^\d\d:\d\d$/.test(day[type])) ? day[type] : (() => {
-    let d = new Date(), h = d.getHours(), m = d.getMinutes();
-    return (h<10?'0':'')+h+":"+(m<10?'0':'')+m;
-  })();
+  let val = (day[type] && /^\d\d:\d\d$/.test(day[type]))
+    ? day[type]
+    : (() => {
+        let d = new Date(), h = d.getHours(), m = d.getMinutes();
+        return (h<10?'0':'')+h+":"+(m<10?'0':'')+m;
+      })();
 
   let label = type === "start" ? "Время прихода" : "Время ухода";
   let html = `
@@ -309,25 +310,25 @@ function openManualTime(type) {
   `;
   showModal(html);
 
-document.getElementById('manualTimeForm').onsubmit = function(e) {
-  e.preventDefault();
-  const input = document.getElementById('manualTimeInput');
-  const t = input.value.trim();
-  if (!t) {
-    input.classList.add('input-error');
-    input.focus();
-    setTimeout(() => input.classList.remove('input-error'), 1000);
-    alert('Пожалуйста, выберите время!');
-    return;
-  }
-  let curday = findDay(dt);
-  if(!curday) { curday = { date: dt, start: '', end: '', tags: [] }; days.push(curday); }
-  curday[type] = t;
-  saveAll();
-  renderApp();
-}
+  document.getElementById('manualTimeForm').onsubmit = function(e) {
+    e.preventDefault();
+    const input = document.getElementById('manualTimeInput');
+    const t = input.value.trim();
+    if (!t) {
+      input.classList.add('input-error');
+      input.focus();
+      setTimeout(() => input.classList.remove('input-error'), 1000);
+      alert('Пожалуйста, выберите время!');
+      return;
+    }
+    let curday = findDay(dt);
+    if(!curday) { curday = { date: dt, start: '', end: '', tags: [] }; days.push(curday); }
+    curday[type] = t;
+    saveAll();
+    renderApp();
+  };
+} 
 
-  
 function editTags() {
   // добавить тег
   let dt = todayStr(); let day = findDay(dt);
@@ -348,6 +349,7 @@ function delTag(idx) {
     }
   }
 }
+  
 // tagIdx: null — новый, int — редактировать
 function showTagModal(tagIdx, forDate) {
   let day = findDay(forDate); if(!day) return;
