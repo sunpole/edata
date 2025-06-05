@@ -168,9 +168,16 @@ input.input-error {
 <script>
 /* ==== Data structure and helpers ==== */
 const STORAGE_KEY = "myworkdays22";
+const DEFAULT_TAG = "НАСТРОЙКА ОБОРУДОВАНИЯ";
 let days = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); // [{date, start, end, tags:[{tag, start, end}]}]
-let tagsLib = JSON.parse(localStorage.getItem("tagsLib22")||"[]"); // list of unique tags for quick adding
-if(tagsLib.length === 0) tagsLib = ["Работа", "Совещание", "Почта"];
+
+let tagsLib = JSON.parse(localStorage.getItem("tagsLib22")||"[]");
+// Если тегов нет, добавляем дефолтный, иначе — следим, чтобы он всегда был первым
+if (!Array.isArray(tagsLib) || tagsLib.length === 0) {
+  tagsLib = [DEFAULT_TAG];
+} else if (!tagsLib.includes(DEFAULT_TAG)) {
+  tagsLib.unshift(DEFAULT_TAG);
+}
 
 function saveAll() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(days));
@@ -352,13 +359,25 @@ function delTag(idx) {
   
 // tagIdx: null — новый, int — редактировать
 function showTagModal(tagIdx, forDate) {
-  let day = findDay(forDate); if(!day) return;
-  let tagObj = tagIdx!==null && day.tags[tagIdx] ? {...day.tags[tagIdx]} : {tag:"",start:day.start||"09:00",end:day.end||"18:00"};
-  let tagOptions = tagsLib.map(t=>`<option>${t}</option>`).join("");
+  let day = findDay(forDate); 
+  if (!day) return;
+
+  // Если добавляем - по умолчанию всегда дефолтный тег.
+  let tagObj;
+  if (tagIdx !== null && day.tags[tagIdx]) {
+    tagObj = { ...day.tags[tagIdx] };
+  } else {
+    tagObj = { tag: DEFAULT_TAG, start: day.start || "09:00", end: day.end || "18:00" };
+  }
+
+  // Дефолтный тег первым, остальные — дальше
+  let tagOptions = [DEFAULT_TAG, ...tagsLib.filter(t => t !== DEFAULT_TAG)]
+    .map(t => `<option value="${t}"></option>`).join("");
+
   let html = `
     <form id="tagForm">
       <label>Тег:<br>
-        <input type="text" list="tagsSug" value="${tagObj.tag||''}" id="tg" required autocomplete="off">
+        <input type="text" list="tagsSug" value="${tagObj.tag || ''}" id="tg" required autocomplete="off">
         <datalist id="tagsSug">${tagOptions}</datalist>
       </label><br>
       <label>Начало:<br>
@@ -367,19 +386,22 @@ function showTagModal(tagIdx, forDate) {
       <label>Конец:<br>
         <input type="time" id="en" value="${tagObj.end}" required>
       </label><br>
-      <div class="row"><button class="btn fullw" type="submit">Сохранить</button>
-      <button type="button" class="btn fullw" onclick="closeModal()">Закрыть</button></div>
+      <div class="row">
+        <button class="btn fullw" type="submit">Сохранить</button>
+        <button type="button" class="btn fullw" onclick="closeModal()">Закрыть</button>
+      </div>
     </form>
   `;
   showModal(html);
+
   document.getElementById('tagForm').onsubmit = function(e) {
     e.preventDefault();
     let tg = document.getElementById('tg').value.trim();
     let st = document.getElementById('st').value, en = document.getElementById('en').value;
-    if(!tg) return alert("Введите тег");
-    if(!tagsLib.includes(tg)) tagsLib.push(tg);
-    if(tagIdx!==null) day.tags[tagIdx]={tag:tg, start:st, end:en};
-    else day.tags.push({tag:tg, start:st, end:en});
+    if (!tg) return alert("Введите тег");
+    if (!tagsLib.includes(tg)) tagsLib.push(tg);
+    if (tagIdx !== null) day.tags[tagIdx] = { tag: tg, start: st, end: en };
+    else day.tags.push({ tag: tg, start: st, end: en });
     saveAll();
     renderApp();
   };
@@ -552,12 +574,19 @@ function downloadText() {
   link.click();
 }
 
-// ==== SETTING, ABOUT, UTILS ====
 function showSettings() {
   let html = `
     <b>Настройки</b>
     <ul class="tags-list">
-      <li><b>Мои теги:</b> ${tagsLib.map(t=>`<span class="badge">${t}</span>`).join(" ")}</li>
+      <li><b>Мои теги:</b></li>
+      ${tagsLib.map((t, i) => `
+        <li style="margin-bottom:6px;">
+          <span class="badge">${t}</span>
+          ${i === 0
+            ? '<span class="small">(обязательный)</span>'
+            : `<button class="edit" onclick="removeTagLib(${i})">✕ удалить</button>`}
+        </li>
+      `).join("")}
       <li>
         <input type="text" id="newTgInp" placeholder="Новый тег...">
         <button class="btn" onclick="addTagFromSettings()">Добавить</button>
@@ -571,17 +600,36 @@ function showSettings() {
   `;
   showModal(html);
 }
+
 function addTagFromSettings() {
   let inp = document.getElementById('newTgInp');
-  if(!inp.value.trim()) return;
-  if(!tagsLib.includes(inp.value.trim())) tagsLib.push(inp.value.trim());
-  saveAll(); closeModal(); renderApp();
+  let newTag = inp.value.trim();
+  if(!newTag) return;
+  if(!tagsLib.includes(newTag)) {
+    tagsLib.push(newTag);
+    saveAll();
+    closeModal();
+    renderApp();
+  }
 }
+
+function removeTagLib(i) {
+  if (i === 0) return; // нельзя удалять основной тег
+  if (confirm(`Удалить тег "${tagsLib[i]}"? Все записи с этим тегом сохранятся, но новый добавить не получится.`)) {
+    tagsLib.splice(i, 1);
+    saveAll();
+    showSettings();
+    renderApp();
+  }
+}
+
 function resetAllData() {
   if(confirm("Удалить все данные?")) {
-    days = []; tagsLib = ["Работа","Совещание","Почта"];
+    days = [];
+    tagsLib = [DEFAULT_TAG]; // сбрасываем только к дефолтному тегу
     saveAll();
-    closeModal(); renderApp();
+    closeModal();
+    renderApp();
   }
 }
 
