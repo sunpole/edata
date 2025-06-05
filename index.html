@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Тайм-трекер | Мой рабочий день</title>
+  <style>
+    :root {
+      --accent: #3a7afe;
+      --bg: #eef3fa;
+      --txt: #222;
+      --btn: #fff;
+      --btn-active: #e4eaff;
+      --radius: 18px;
+      --shadow: 0 3px 20px #0001;
+    }
+    body {
+      background: var(--bg);
+      color: var(--txt);
+      margin: 0; padding: 0;
+      font-family: system-ui, sans-serif;
+      min-height:100vh;
+    }
+    .container {
+      padding: 1.5rem 1rem;
+      max-width: 420px;
+      margin:auto;
+      background: #fff;
+      border-radius: var(--radius);
+      margin-top:3vh;
+      box-shadow: var(--shadow);
+    }
+    h1 {
+      margin: 0 0 12px; font-size: 2rem; font-weight: bold;
+      color: var(--accent);
+      text-align:center;
+    }
+    .row {
+      display: flex;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .row-col {
+      flex-direction: column;
+      gap:6px;
+    }
+    .btn {
+      background: var(--btn);
+      border:2px solid var(--accent);
+      color: var(--accent);
+      border-radius: var(--radius);
+      font-size: 1.3rem;
+      padding: 1em 1em;
+      flex:1 1 auto;
+      font-weight: 500;
+      cursor:pointer;
+      transition:.1s;
+      box-shadow: var(--shadow);
+    }
+    .btn.active, .btn:active {
+      background: var(--btn-active);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .edit {
+      background: none; border:none;
+      color: var(--accent);
+      font-size:1.2em;
+      cursor:pointer;
+      margin-left:6px;
+    }
+    .tags-list {margin:.4em 0 0;padding:0;list-style:none;}
+    .tags-list li{padding:.2em 0;}
+    .cal-btn {font-size:1rem;padding:.2em 1em;margin:.2em;border-radius:12px;background:#e8f1ff;border:none;color:#217;cursor:pointer;}
+    .cal-btn.selected {background:var(--accent);color:#fff;}
+
+    /* EXPAND ON OLD PHONES */
+    @media (max-width: 400px) {
+      .container {padding:.5em .3em;margin-top:1vh;}
+      h1 {font-size:1.3rem;}
+      .btn {font-size:1rem;padding:.6em .2em;}
+    }
+    /* MODERN */
+    @media (min-width:401px) {
+      .container{margin-top:6vh;}
+    }
+    /* full width rows for mobile comfort */
+    .fullw {width:100%;display:block;}
+    .center{text-align:center;}
+    hr{margin:16px 0;}
+
+    .export {background:#fffbe7;padding:.7em .8em;border-radius:14px;margin-top:.6em;color:#993;}
+    .setting-row{display:flex;align-items:center;gap:7px;margin:.5em 0;}
+    select,input[type=number]{font-size:1em;padding:.2em .3em;border-radius:8px;border:1px solid #bbb;}
+    .badge{background:var(--accent);color:#fff;border-radius:8px;padding:.1em .7em;font-size:1em;}
+    .small{font-size:.92em;color:#888;}
+    .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:#0002;z-index:22;display:flex;align-items:center;justify-content:center;}
+    .modal-inner{background:#fff;padding:1.2em;border-radius:20px;max-width:350px;width:95%;box-shadow:var(--shadow);}
+    .close-btn{float:right;background:none;border:none;color:#a44;font-size:1.4em;cursor:pointer;}
+    .sw-btn{margin:.1em .2em;}
+  </style>
+</head>
+<body>
+<div class="container" id="app"></div>
+
+<!-- Модальное окно (редактор тегов/времени/экспорт/отчет) -->
+<div id="modal" style="display:none;"></div>
+
+<script>
+/* ==== Data structure and helpers ==== */
+const STORAGE_KEY = "myworkdays22";
+let days = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); // [{date, start, end, tags:[{tag, start, end}]}]
+let tagsLib = JSON.parse(localStorage.getItem("tagsLib22")||"[]"); // list of unique tags for quick adding
+if(tagsLib.length === 0) tagsLib = ["Работа", "Совещание", "Почта"];
+
+function saveAll() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(days));
+  localStorage.setItem("tagsLib22", JSON.stringify(tagsLib));
+}
+
+function findDay(date) {
+  return days.find(d => d.date === date);
+}
+
+function todayStr() {
+  return (new Date()).toISOString().slice(0,10);
+}
+
+function toHM(dt) {
+  // dt: "09:25", returns [9,25]
+  let [h,m] = dt.split(":").map(Number); return [h,m];
+}
+
+function fromHM(h, m) {
+  // int,int => "09:25"
+  return (h<10?'0':'')+h+":"+(m<10?'0':'')+m;
+}
+
+// Округление минуты в времени (вверх/вниз/отброс)
+function roundTime(timeStr, roundMin=10, direction='round') {
+  let [h, m] = toHM(timeStr);
+  let total = h*60+m;
+  let q = total / roundMin;
+  let res;
+  if(direction==='down') res = Math.floor(q);
+  else if(direction==='up') res = Math.ceil(q);
+  else res = Math.round(q);
+  total = res*roundMin;
+  h = Math.floor(total/60);
+  m = total%60;
+  return fromHM(h, m);
+}
+
+// Разница во времени (чч:мм → минуты)
+function diffMinutes(tm1, tm2) {
+  let [h1,m1] = toHM(tm1), [h2,m2]=toHM(tm2);
+  return (h2*60+m2)-(h1*60+m1);
+}
+
+// ===== UI render =====
+
+function renderApp() {
+  let dt = todayStr();
+  let day = findDay(dt);
+  let rows = [];
+  rows.push(`<h1>Мой рабочий день</h1>`);
+  rows.push(`<div class="row"><button class="btn" onclick="markNow('start')" style="background:${day?.start?'#cafaff':''};">${day?.start?('➔ '+day.start):'Пришел'}</button>
+  <button class="btn" onclick="markNow('end')" style="background:${day?.end?'#ffeacc':''};">${day?.end?('⎋ '+day.end):'Ушел'}</button></div>`);
+  // DURATION
+  if(day?.start && day?.end) {
+    let time = diffMinutes(day.start, day.end);
+    rows.push(`<div class="center"><span class="badge">${Math.floor(time/60)}ч ${(time%60).toString().padStart(2,"0")}м</span> общий рабочий день</div>`);
+  }
+  // TAGS-list
+  rows.push(`<hr><div><b>Деятельность:</b> <button class="edit" onclick="editTags()">+Тег</button></div>`);
+  if(day?.tags?.length) {
+    rows.push(`<ul class="tags-list">`+
+      day.tags.map((t,i)=>`<li><b>${t.tag}</b> — ${t.start}…${t.end} 
+      <button class="edit" onclick="editTag(${i})">✎</button> 
+      <button class="edit" onclick="delTag(${i})">✕</button>
+      </li>`).join('')+
+      `</ul>`);
+  } else {
+    rows.push(`<div class="small">Пока не добавлено</div>`);
+  }
+  rows.push(`<hr>`);
+  // КАЛЕНДАРЬ до отчетов и настроек
+  rows.push(`<div class="row"><button class="btn" onclick="showCalendar()">📅 Календарь</button><button class="btn" onclick="showExport()">Экспорт</button></div>`);
+  rows.push(`<div class="row"><button class="btn" onclick="showSettings()">⚙️ Настройки</button><button class="btn" onclick="showAbout()">?</button></div>`);
+  document.getElementById('app').innerHTML = rows.join('\n');
+  closeModal();
+}
+window.renderApp=renderApp;
+
+// ===================== MARK HANDLERS ========================
+function markNow(type) {
+  let dt = todayStr();
+  let now = new Date();
+  let h = now.getHours(), m = now.getMinutes();
+  let tstr = fromHM(h, m);
+  let day = findDay(dt);
+  if(!day) {
+    day = {date: dt, start: '', end: '', tags:[]};
+    days.push(day);
+  }
+  day[type] = tstr;
+  saveAll(); renderApp();
+}
+
+function editTags() {
+  // добавить тег
+  let dt = todayStr(); let day = findDay(dt);
+  if(!day) {alert("Сначала отметьте время прихода (и желательно ухода)!");return;}
+  showTagModal(null, dt);
+}
+function editTag(idx) {
+  let dt = todayStr(); let day = findDay(dt);
+  showTagModal(idx, dt);
+}
+function delTag(idx) {
+  let dt = todayStr(); let day = findDay(dt);
+  if(day && day.tags && day.tags[idx] !== undefined) {
+    if(confirm("Удалить тег "+day.tags[idx].tag+"?")) {
+      day.tags.splice(idx,1);
+      saveAll();
+      renderApp();
+    }
+  }
+}
+// tagIdx: null — новый, int — редактировать
+function showTagModal(tagIdx, forDate) {
+  let day = findDay(forDate); if(!day) return;
+  let tagObj = tagIdx!==null && day.tags[tagIdx] ? {...day.tags[tagIdx]} : {tag:"",start:day.start||"09:00",end:day.end||"18:00"};
+  let tagOptions = tagsLib.map(t=>`<option>${t}</option>`).join("");
+  let html = `
+    <form id="tagForm">
+      <label>Тег:<br>
+        <input type="text" list="tagsSug" value="${tagObj.tag||''}" id="tg" required autocomplete="off">
+        <datalist id="tagsSug">${tagOptions}</datalist>
+      </label><br>
+      <label>Начало:<br>
+        <input type="time" id="st" value="${tagObj.start}" required>
+      </label><br>
+      <label>Конец:<br>
+        <input type="time" id="en" value="${tagObj.end}" required>
+      </label><br>
+      <div class="row"><button class="btn fullw" type="submit">Сохранить</button>
+      <button type="button" class="btn fullw" onclick="closeModal()">Закрыть</button></div>
+    </form>
+  `;
+  showModal(html);
+  document.getElementById('tagForm').onsubmit = function(e) {
+    e.preventDefault();
+    let tg = document.getElementById('tg').value.trim();
+    let st = document.getElementById('st').value, en = document.getElementById('en').value;
+    if(!tg) return alert("Введите тег");
+    if(!tagsLib.includes(tg)) tagsLib.push(tg);
+    if(tagIdx!==null) day.tags[tagIdx]={tag:tg, start:st, end:en};
+    else day.tags.push({tag:tg, start:st, end:en});
+    saveAll();
+    renderApp();
+  };
+}
+
+// ===== КАЛЕНДАРЬ и просмотр дней ======
+function showCalendar(mon=null, yr=null) {
+  // Календарь за месяц c пометками где есть записи, клик по дню — детали дня
+  let now = new Date();
+  let year = yr || now.getFullYear();
+  let month = mon!==null ? mon : now.getMonth(); // 0-based
+  let first = new Date(year,month,1);
+  let last = new Date(year,month+1,0);
+  let daysNum = last.getDate();
+  let content = `<div style='text-align:center'>${["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"][month]} ${year}</div>`;
+  content += `<div class="row" style="flex-wrap:wrap;justify-content:center">`;
+  for(let i=1;i<=daysNum;i++){
+    let ds = `${year}-${(month+1).toString().padStart(2,"0")}-${i.toString().padStart(2,"0")}`;
+    let hasData = days.some(d=>d.date===ds);
+    content+=`<button class="cal-btn${hasData?' selected':''}" onclick="showDay('${ds}')">${i}</button>`;
+  }
+  content += `</div><div class='center'><button class="sw-btn" onclick="showCalendar(${month-1<0?11:month-1},${month-1<0?year-1:year})">←</button>
+  <button class="sw-btn" onclick="showCalendar(${month+1>11?0:month+1},${month+1>11?year+1:year})">→</button></div>`;
+  content += `<div class='center'><button class="btn fullw" onclick="closeModal()">Закрыть</button></div>`;
+  showModal(content);
+}
+function showDay(ds) {
+  let day = findDay(ds);
+  let html = `<b>${ds}</b><br>
+  Время: ${day?.start || '—'} — ${day?.end || '—'}<br>
+  ${
+    day?.tags?.length ?
+     `<ul class="tags-list">`+
+      day.tags.map((t,i)=>`<li><b>${t.tag}</b> ${t.start}…${t.end}</li>`).join('')+
+      `</ul>`: '<div class="small">Нет тегов</div>'
+  }
+  <div class='center'><button class="btn" onclick="closeModal()">Назад</button></div>
+  `;
+  showModal(html);
+}
+
+// ===== ЭКСПОРТ ОТЧЕТА =================
+function showExport() {
+  // Settings: диапазон дат, выбрать что экспортировать, тип округления, вверх/вниз/обычно
+  let minDate = days.length?days[0].date:todayStr();
+  let maxDate = days.length?days[days.length-1].date:todayStr();
+  let html = `
+    <div><b>Экспортировать отчёт</b></div>
+    <form id="reportForm">
+      <div class="setting-row">Период: 
+        <select id="per">
+          <option value="1-15">1–15</option>
+          <option value="16-31">16–31</option>
+          <option value="full">Весь месяц</option>
+          <option value="range">Период</option>
+        </select>
+        <input type="date" id="dfrom" style="display:none" value="${minDate}"> -
+        <input type="date" id="dto" style="display:none" value="${maxDate}">
+      </div>
+      <div class="setting-row">Экспорт:
+        <select id="expType">
+          <option value="all">Всё</option>
+          <option value="tags">Только теги</option>
+          <option value="work">Только рабочие часы (приход/уход)</option>
+        </select>
+      </div>
+      <div class="setting-row">Округление:
+        <select id="roundM">
+          <option value="60">До 1 часа</option>
+          <option value="30">До 30 мин</option>
+          <option value="10" selected>До 10 мин</option>
+        </select>
+        <select id="roundDir">
+          <option value="round">Обычно</option>
+          <option value="up">Вверх</option>
+          <option value="down">Вниз</option>
+        </select>
+      </div>
+      <div class="setting-row">Теги: <select multiple id="tagsFlt" style="min-width:70px;min-height:2em;">
+        ${tagsLib.map(t=>`<option value="${t}" selected>${t}</option>`).join("")}
+      </select> <span class="small">(для режима "теги")</span></div>
+      <button class="btn fullw" type="submit">Экспортировать</button>
+      <button class="btn fullw" type="button" onclick="closeModal()">Отмена</button>
+    </form>
+    <div id="exportResult"></div>
+  `;
+  showModal(html);
+  let perSel = document.getElementById("per");
+  let fromD = document.getElementById("dfrom");
+  let toD = document.getElementById("dto");
+  perSel.onchange = function() {
+    if(perSel.value==='range'){
+      fromD.style.display='inline';
+      toD.style.display='inline';
+    } else {
+      fromD.style.display='none';
+      toD.style.display='none';
+    }
+  }
+  document.getElementById("reportForm").onsubmit = function(e) {
+    e.preventDefault();
+    // Params
+    let period = perSel.value;
+    let from = fromD.value || minDate;
+    let to = toD.value || maxDate;
+    let exp = document.getElementById("expType").value;
+    let roundM = +document.getElementById("roundM").value;
+    let roundDir = document.getElementById("roundDir").value;
+    // select tags
+    let tagsFlt = Array.from(document.getElementById("tagsFlt").selectedOptions).map(op=>op.value);
+
+    // Даты фильтра
+    // Получаем нужные дни
+    let list, byMonth = {};
+    if (period === "1-15") {
+      list = days.filter(d=>+d.date.slice(8,10)<=15 && inThisMonth(d.date));
+    } else if(period === "16-31") {
+      list = days.filter(d=>+d.date.slice(8,10)>=16 && inThisMonth(d.date));
+    } else if(period === "range") {
+      list = days.filter(d=>d.date >= from && d.date <= to);
+    } else { // full
+      list = days.filter(d=>inThisMonth(d.date));
+    }
+    function inThisMonth(dt) {
+      let selm = days.length ? days[days.length-1].date.slice(5,7) : todayStr().slice(5,7);
+      return dt.slice(5,7)===selm;
+    }
+
+    let rows = [];
+    if(exp==='work'||exp==='all'){
+      // таблица: Дата: Приход - Уход = X ч Y мин
+      for(const d of list) {
+        let s = d.start?roundTime(d.start, roundM, roundDir):"", e = d.end?roundTime(d.end, roundM, roundDir):"";
+        if(!s || !e) continue;
+        let mins = diffMinutes(s,e);
+        let hr = Math.floor(mins/60), mn = mins%60;
+        rows.push(`${d.date}: ${s} – ${e} (${hr}ч ${mn}м)`);
+      }
+    }
+    if(exp==='tags'||exp==='all'){
+      for(const d of list) {
+        if(!d.tags?.length) continue;
+        // фильтр тегов:
+        for(const tag of d.tags) {
+          if(tagsFlt.includes(tag.tag)){
+            let st = roundTime(tag.start, roundM, roundDir), en = roundTime(tag.end, roundM, roundDir);
+            let mins = diffMinutes(st, en);
+            let hr = Math.floor(mins/60), mn = mins%60;
+            rows.push(`${d.date}: ${tag.tag} — ${st}-${en} (${hr}ч ${mn}м)`);
+          }
+        }
+      }
+    }
+    let resTxt = rows.join('\n');
+    document.getElementById("exportResult").innerHTML =
+      `<div class="export"><b>Готовый текст:</b><br>
+      <textarea style="width:98%;min-height:120px">${resTxt}</textarea>
+      <br>
+      <button class="btn" type="button" onclick="downloadText()">Скачать .txt</button>
+      </div>`;
+    window.export__text = resTxt;
+    return false;
+  };
+}
+function downloadText() {
+  let b = new Blob([window.export__text || ""], {type:"text/plain"});
+  let link = document.createElement("a");
+  link.href = URL.createObjectURL(b);
+  link.download = "work_report.txt";
+  link.click();
+}
+
+// ==== SETTING, ABOUT, UTILS ====
+function showSettings() {
+  let html = `
+    <b>Настройки</b>
+    <ul class="tags-list">
+      <li><b>Мои теги:</b> ${tagsLib.map(t=>`<span class="badge">${t}</span>`).join(" ")}</li>
+      <li>
+        <input type="text" id="newTgInp" placeholder="Новый тег...">
+        <button class="btn" onclick="addTagFromSettings()">Добавить</button>
+      </li>
+      <li>
+        <button class="btn" onclick="resetAllData()">Сбросить все данные</button>
+        <span class="small">(безвозвратно)</span>
+      </li>
+    </ul>
+    <button class="btn fullw" onclick="closeModal()">Закрыть</button>
+  `;
+  showModal(html);
+}
+function addTagFromSettings() {
+  let inp = document.getElementById('newTgInp');
+  if(!inp.value.trim()) return;
+  if(!tagsLib.includes(inp.value.trim())) tagsLib.push(inp.value.trim());
+  saveAll(); closeModal(); renderApp();
+}
+function resetAllData() {
+  if(confirm("Удалить все данные?")) {
+    days = []; tagsLib = ["Работа","Совещание","Почта"];
+    saveAll();
+    closeModal(); renderApp();
+  }
+}
+function showAbout() {
+  let html = `
+    <b>Трекер рабочего времени</b><br>
+    <div class="small">
+    Автор: <a href="https://github.com/" target="_blank">github.com/</a> <br>
+    Версия: ✨ MVP 2024 ✨<br>
+    Все данные только на вашем устройстве.<br>
+    <br>
+    Используйте для учёта реального рабочего времени.<br>
+    <br>
+    <button class="btn" onclick="closeModal()">Понятно</button>
+    </div>
+  `;
+  showModal(html);
+}
+
+function showModal(html) {
+  let m = document.getElementById("modal");
+  m.innerHTML = `<div class="modal" onclick="closeModal(event)">
+    <div class="modal-inner" onclick="event.stopPropagation()">${html}</div>
+  </div>`;
+  m.style.display = '';
+}
+function closeModal(e) {
+  if(e && e.target!==document.getElementById("modal"))return;
+  document.getElementById("modal").style.display='none';
+}
+
+renderApp();
+</script>
+</body>
+</html>
