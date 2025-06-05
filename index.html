@@ -35,15 +35,60 @@
       color: var(--accent);
       text-align:center;
     }
-    .row {
-      display: flex;
-      gap:10px;
-      margin-bottom:12px;
-    }
-    .row-col {
-      flex-direction: column;
-      gap:6px;
-    }
+.row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.row-col {
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Новый стиль для двойных кнопок */
+.dual-btn {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 2px solid var(--accent);
+}
+
+.dual-btn .btn {
+  border: none;
+  border-radius: 0;
+  font-size: 1.2rem;
+  background: var(--btn);
+  color: var(--accent);
+  box-shadow: none;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0.85em 0.5em;
+}
+
+.dual-btn .btn:first-child {
+  border-right: 1px solid #b3d1fd;
+  background: #cafaff;
+}
+.dual-btn .btn:last-child {
+  background: #e4eaff;
+}
+
+.btn-sub {
+  font-size: 0.76em;
+  color: #2995fa;
+  margin-top: 2px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+    
     .btn {
       background: var(--btn);
       border:2px solid var(--accent);
@@ -74,6 +119,20 @@
     .cal-btn {font-size:1rem;padding:.2em 1em;margin:.2em;border-radius:12px;background:#e8f1ff;border:none;color:#217;cursor:pointer;}
     .cal-btn.selected {background:var(--accent);color:#fff;}
 
+input.input-error {
+  border: 2px solid #ff4343 !important;
+  background: #ffe7e7 !important;
+  animation: shake 0.4s;
+}
+@keyframes shake {
+  0% { transform: translateX(0px);}
+  20% { transform: translateX(-5px);}
+  40% { transform: translateX(5px);}
+  60% { transform: translateX(-4px);}
+  80% { transform: translateX(4px);}
+  100% { transform: translateX(0px);}
+}
+    
     /* EXPAND ON OLD PHONES */
     @media (max-width: 400px) {
       .container {padding:.5em .3em;margin-top:1vh;}
@@ -164,8 +223,26 @@ function renderApp() {
   let day = findDay(dt);
   let rows = [];
   rows.push(`<h1>Мой рабочий день</h1>`);
-  rows.push(`<div class="row"><button class="btn" onclick="markNow('start')" style="background:${day?.start?'#cafaff':''};">${day?.start?('➔ '+day.start):'Пришел'}</button>
-  <button class="btn" onclick="markNow('end')" style="background:${day?.end?'#ffeacc':''};">${day?.end?('⎋ '+day.end):'Ушел'}</button></div>`);
+  rows.push(`
+    <div class="row">
+      <div class="dual-btn">
+        <button class="btn" onclick="markNow('start')">
+          ➔ ${day?.start || '--:--'}<div class="btn-sub">ТЕКУЩЕЕ ВРЕМЯ</div>
+        </button>
+        <button class="btn" onclick="openManualTime('start')">
+          🕒<div class="btn-sub">ВЫБРАТЬ ВРЕМЯ</div>
+        </button>
+      </div>
+      <div class="dual-btn">
+        <button class="btn" onclick="markNow('end')">
+          ⏱ ${day?.end || '--:--'}<div class="btn-sub">ТЕКУЩЕЕ ВРЕМЯ</div>
+        </button>
+        <button class="btn" onclick="openManualTime('end')">
+          🕒<div class="btn-sub">ВЫБРАТЬ ВРЕМЯ</div>
+        </button>
+      </div>
+    </div>
+  `);
   // DURATION
   if(day?.start && day?.end) {
     let time = diffMinutes(day.start, day.end);
@@ -190,7 +267,7 @@ function renderApp() {
   document.getElementById('app').innerHTML = rows.join('\n');
   closeModal();
 }
-window.renderApp=renderApp;
+window.renderApp = renderApp;
 
 // ===================== MARK HANDLERS ========================
 function markNow(type) {
@@ -207,6 +284,50 @@ function markNow(type) {
   saveAll(); renderApp();
 }
 
+
+function openManualTime(type) {
+  let dt = todayStr();
+  let day = findDay(dt) || { date: dt, start: '', end: '', tags: [] };
+
+  // Значение по умолчанию: текущее или уже выбранное
+  let val = (day[type] && /^\d\d:\d\d$/.test(day[type])) ? day[type] : (() => {
+    let d = new Date(), h = d.getHours(), m = d.getMinutes();
+    return (h<10?'0':'')+h+":"+(m<10?'0':'')+m;
+  })();
+
+  let label = type === "start" ? "Время прихода" : "Время ухода";
+  let html = `
+    <form id="manualTimeForm">
+      <label>${label}:<br>
+        <input type="time" id="manualTimeInput" value="${val}" required>
+      </label>
+      <div class="row" style="margin-top:16px;">
+        <button class="btn fullw" type="submit">Сохранить</button>
+        <button type="button" class="btn fullw" onclick="closeModal()">Отмена</button>
+      </div>
+    </form>
+  `;
+  showModal(html);
+
+document.getElementById('manualTimeForm').onsubmit = function(e) {
+  e.preventDefault();
+  const input = document.getElementById('manualTimeInput');
+  const t = input.value.trim();
+  if (!t) {
+    input.classList.add('input-error');
+    input.focus();
+    setTimeout(() => input.classList.remove('input-error'), 1000);
+    alert('Пожалуйста, выберите время!');
+    return;
+  }
+  let curday = findDay(dt);
+  if(!curday) { curday = { date: dt, start: '', end: '', tags: [] }; days.push(curday); }
+  curday[type] = t;
+  saveAll();
+  renderApp();
+}
+
+  
 function editTags() {
   // добавить тег
   let dt = todayStr(); let day = findDay(dt);
