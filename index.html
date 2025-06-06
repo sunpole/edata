@@ -381,6 +381,9 @@ input.input-error {
 <!-- Модальное окно (редактор тегов/времени/экспорт/отчет) -->
 <div id="modal" style="display:none;"></div>
 
+
+
+  
 <script>
 /* ==== Data structure and helpers ==== */
 const STORAGE_KEY = "myworkdays22";
@@ -526,12 +529,19 @@ function renderApp() {
   
   // TAGS-list
 rows.push(`<hr><div><b>Деятельность:</b></div>`);
+let tagSums = {};
 if (day?.tags?.length) {
   rows.push('<ul class="tags-list">');
   day.tags.forEach((t, i) => {
+    // считаем длительность
+    let st = t.start, en = t.end;
+    let mins = (st && en) ? diffMinutes(st, en) : 0;
+    if (!tagSums[t.tag]) tagSums[t.tag] = 0;
+    tagSums[t.tag] += mins > 0 ? mins : 0;
+    let hr = Math.floor(mins/60), mn = mins%60;
     rows.push(
       `<li>
-        <b>${t.tag}</b>
+        <b>${t.tag}</b> ${st || '--:--'}…${en || '--:--'}${mins>0 ? ` <span class="small">(${hr}ч ${mn}м)</span>` : ''}
         <div class="row" style="margin:.3em 0;flex-wrap:wrap;">
           <div class="dual-btn">
             <button class="btn" onclick="markTagNow(${i}, 'start')">
@@ -564,6 +574,16 @@ if (day?.tags?.length) {
     </li>
   `);
   rows.push('</ul>');
+
+  // Итоги по тегам за текущий день
+  if (Object.keys(tagSums).length > 0) {
+    rows.push(`<div class="small" style="margin:7px 0 0 2px;"><b>Итого по тегам за сегодня:</b><br>`);
+    for (const tag in tagSums) {
+      let tot = tagSums[tag], hr = Math.floor(tot/60), mn = tot%60;
+      rows.push(`${tag}: ${hr}ч ${mn}м<br>`);
+    }
+    rows.push(`</div>`);
+  }
 } else {
   // Если тегов нет
   rows.push(`<div class="small">Пока не добавлено</div>
@@ -795,23 +815,43 @@ function showCalendar(mon=null, yr=null) {
 function showDay(ds) {
   let day = findDay(ds);
   let html = `<b>${ds}</b><br>
-  Время: ${day?.start || '—'} — ${day?.end || '—'}<br>
-  ${
-    day?.tags?.length ?
-     `<ul class="tags-list">`+
-      day.tags.map((t,i)=>`<li><b>${t.tag}</b> ${t.start}…${t.end}</li>`).join('')+
-      `</ul>`: '<div class="small">Нет тегов</div>'
+  Время: ${day?.start || '—'} — ${day?.end || '—'}<br>`;
+
+  if (day?.tags?.length) {
+    html += `<ul class="tags-list">`;
+    let tagSums = {};
+    day.tags.forEach((t) => {
+      let st = t.start, en = t.end;
+      let mins = (st && en) ? diffMinutes(st, en) : 0;
+      if (!tagSums[t.tag]) tagSums[t.tag] = 0;
+      tagSums[t.tag] += mins > 0 ? mins : 0;
+      let hr = Math.floor(mins/60), mn = mins%60;
+      html += `<li><b>${t.tag}</b> ${st}…${en} ${ (mins > 0 ? `(${hr}ч ${mn}м)` : '')}</li>`;
+    });
+    html += `</ul>`;
+
+    // Суммарно по тегам за день, если есть хоть один тег
+    if(Object.keys(tagSums).length){
+      html += `<div class="small" style="margin-top:8px;"><b>Итого по тегам за день:</b><br>`;
+      for(const tag in tagSums){
+        let tot = tagSums[tag], hr=Math.floor(tot/60), mn=tot%60;
+        html += `${tag}: ${hr}ч ${mn}м<br>`;
+      }
+      html += `</div>`;
+    }
   }
-  <div class='center'><button class="btn" onclick="closeModal()">Назад</button></div>
-  `;
+  else {
+    html += `<div class="small">Нет тегов</div>`;
+  }
+  html += `<div class='center'><button class="btn" onclick="closeModal()">Назад</button></div>`;
   showModal(html);
 }
 
 // ===== ЭКСПОРТ ОТЧЕТА =================
-function showExport() {
+
   // Settings: диапазон дат, выбрать что экспортировать, тип округления, вверх/вниз/обычно
-  let minDate = days.length?days[0].date:todayStr();
-  let maxDate = days.length?days[days.length-1].date:todayStr();
+  let minDate = days.length ? days[0].date : todayStr();
+  let maxDate = days.length ? days[days.length-1].date : todayStr();
   let html = `
     <div><b>Экспортировать отчёт</b></div>
     <form id="reportForm">
@@ -879,7 +919,7 @@ function showExport() {
 
     // Даты фильтра
     // Получаем нужные дни
-    let list, byMonth = {};
+    let list;
     if (period === "1-15") {
       list = days.filter(d=>+d.date.slice(8,10)<=15 && inThisMonth(d.date));
     } else if(period === "16-31") {
@@ -895,8 +935,9 @@ function showExport() {
     }
 
     let rows = [];
+    let tagTotals = {}; // добавлено: итоги по тегам
+
     if(exp==='work'||exp==='all'){
-      // таблица: Дата: Приход - Уход = X ч Y мин
       for(const d of list) {
         let s = d.start?roundTime(d.start, roundM, roundDir):"", e = d.end?roundTime(d.end, roundM, roundDir):"";
         if(!s || !e) continue;
@@ -908,14 +949,24 @@ function showExport() {
     if(exp==='tags'||exp==='all'){
       for(const d of list) {
         if(!d.tags?.length) continue;
-        // фильтр тегов:
         for(const tag of d.tags) {
           if(tagsFlt.includes(tag.tag)){
-            let st = roundTime(tag.start, roundM, roundDir), en = roundTime(tag.end, roundM, roundDir);
+            let st = roundTime(tag.start, roundM, roundDir),
+                en = roundTime(tag.end, roundM, roundDir);
             let mins = diffMinutes(st, en);
+            if (!tagTotals[tag.tag]) tagTotals[tag.tag] = 0;
+            tagTotals[tag.tag] += mins > 0 ? mins : 0;
             let hr = Math.floor(mins/60), mn = mins%60;
             rows.push(`${d.date}: ${tag.tag} — ${st}-${en} (${hr}ч ${mn}м)`);
           }
+        }
+      }
+      // добавлено: суммарно по тегам
+      if(Object.keys(tagTotals).length){
+        rows.push('\nСуммарно по тегам:');
+        for(const tag of Object.keys(tagTotals)){
+          let tot = tagTotals[tag], hr = Math.floor(tot/60), mn = tot%60;
+          rows.push(`${tag}: ${hr}ч ${mn}м`);
         }
       }
     }
@@ -1089,5 +1140,7 @@ function closeModal(e) {
 
 renderApp();
 </script>
+
+  
 </body>
 </html>
