@@ -1,41 +1,84 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8">  
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  
+  <!-- Стандартный favicon -->
+  <link rel="icon" type="image/png" sizes="16x16" href="/path/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/path/favicon-32x32.png">
+  <link rel="icon" type="image/x-icon" href="/path/favicon.ico">
+  <!-- Для iOS/Android -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/path/apple-touch-icon.png">
+  
   <title>Тайм-трекер | Мой рабочий день</title>
   <style>
     :root {
-      --accent: #3a7afe;
-      --bg: #eef3fa;
-      --txt: #222;
-      --btn: #fff;
-      --btn-active: #e4eaff;
-      --radius: 18px;
-      --shadow: 0 3px 20px #0001;
-    }
-    body {
-      background: var(--bg);
-      color: var(--txt);
-      margin: 0; padding: 0;
-      font-family: system-ui, sans-serif;
-      min-height:100vh;
-    }
-    .container {
-      padding: 1.5rem 1rem;
-      padding-bottom: 80px;
-      max-width: 420px;
-      margin:auto;
-      background: #fff;
-      border-radius: var(--radius);
-      margin-top:3vh;
-      box-shadow: var(--shadow);
-    }
-    h1 {
-      margin: 0 0 12px; font-size: 2rem; font-weight: bold;
-      color: var(--accent);
-      text-align:center;
-    }
+  /* Цвета основного интерфейса */
+  --color-accent: #3a7afe;
+  --color-accent-light: #b3d1fd;
+  --color-bg: #eef3fa;
+  --color-bg-white: #fff;
+  --color-bg-footer: #f5f8fe;
+  --color-bg-btn-active: #e4eaff;
+  --color-bg-dual-btn: #cafaff;
+  --color-bg-dual-btn-last: #e4eaff;
+  --color-bg-calendar: #e8f1ff;
+  --color-bg-export: #fffbe7;
+  --color-input-error: #ffe7e7;
+
+  --color-txt: #222;
+  --color-txt-grey: #555;
+  --color-txt-accent: #2995fa;
+  --color-txt-small: #888;
+  --color-txt-export: #993;
+  --color-txt-calendar: #217;
+  --color-txt-badge: #fff;
+  --color-txt-error: #ff4343;
+
+  --radius-main: 18px;
+  --radius-calendar: 12px;
+  --radius-export: 14px;
+  --radius-badge: 8px;
+  --shadow: 0 3px 20px #0001;
+
+  --footer-height: 60px;
+
+  /* Отступы */
+  --container-padding-v: 1.5rem;
+  --container-padding-h: 1rem;
+  --container-padding-bottom: 80px;
+}
+
+/* ===== БАЗОВАЯ СЕТКА ===== */
+body {
+  background: var(--color-bg);
+  color: var(--color-txt);
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+.container {
+  padding: var(--container-padding-v) var(--container-padding-h);
+  padding-bottom: var(--container-padding-bottom);
+  max-width: 420px;
+  margin: auto;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-main);
+  margin-top: 3vh;
+  box-shadow: var(--shadow);
+}
+
+h1 {
+  margin: 0 0 12px;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--color-accent);
+  text-align: center;
+}
+
 .row {
   display: flex;
   gap: 10px;
@@ -47,22 +90,35 @@
   gap: 6px;
 }
 
-/* Новый стиль для двойных кнопок */
+.fullw {
+  width: 100%;
+  display: block;
+}
+
+.center {
+  text-align: center;
+}
+
+hr {
+  margin: 16px 0;
+}
+
+/* ====== ДВОЙНЫЕ КНОПКИ ====== */
 .dual-btn {
   display: flex;
   flex-direction: row;
   flex: 1 1 0;
-  border-radius: var(--radius);
+  border-radius: var(--radius-main);
   overflow: hidden;
-  border: 2px solid var(--accent);
+  border: 2px solid var(--color-accent);
 }
 
 .dual-btn .btn {
   border: none;
   border-radius: 0;
   font-size: 1.2rem;
-  background: var(--btn);
-  color: var(--accent);
+  background: var(--color-bg-white);
+  color: var(--color-accent);
   box-shadow: none;
   flex: 1 1 0;
   display: flex;
@@ -74,81 +130,107 @@
 }
 
 .dual-btn .btn:first-child {
-  border-right: 1px solid #b3d1fd;
-  background: #cafaff;
+  border-right: 1px solid var(--color-accent-light);
+  background: var(--color-bg-dual-btn);
 }
 .dual-btn .btn:last-child {
-  background: #e4eaff;
+  background: var(--color-bg-dual-btn-last);
 }
 
+/* Основная кнопка */
+.btn {
+  background: var(--color-bg-white);
+  border: 2px solid var(--color-accent);
+  color: var(--color-accent);
+  border-radius: var(--radius-main);
+  font-size: 1.3rem;
+  padding: 1em 1em;
+  flex: 1 1 auto;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.1s;
+  box-shadow: var(--shadow);
+}
+
+.btn.active,
+.btn:active {
+  background: var(--color-bg-btn-active);
+  color: var(--color-bg-white);
+  border-color: var(--color-accent);
+}
+
+/* Вспомогательный подзаголовок на кнопках */
 .btn-sub {
   font-size: 0.76em;
-  color: #2995fa;
+  color: var(--color-txt-accent);
   margin-top: 2px;
   font-weight: 400;
   letter-spacing: 0.02em;
   line-height: 1;
 }
-    
-    .btn {
-      background: var(--btn);
-      border:2px solid var(--accent);
-      color: var(--accent);
-      border-radius: var(--radius);
-      font-size: 1.3rem;
-      padding: 1em 1em;
-      flex:1 1 auto;
-      font-weight: 500;
-      cursor:pointer;
-      transition:.1s;
-      box-shadow: var(--shadow);
-    }
-    .btn.active, .btn:active {
-      background: var(--btn-active);
-      color: #fff;
-      border-color: var(--accent);
-    }
-    .edit {
-      background: none; border:none;
-      color: var(--accent);
-      font-size:1.2em;
-      cursor:pointer;
-      margin-left:6px;
-    }
-    .tags-list {margin:.4em 0 0;padding:0;list-style:none;}
-    .tags-list li{padding:.2em 0;}
-    .cal-btn {font-size:1rem;padding:.2em 1em;margin:.2em;border-radius:12px;background:#e8f1ff;border:none;color:#217;cursor:pointer;}
-    .cal-btn.selected {background:var(--accent);color:#fff;}
 
-input.input-error {
-  border: 2px solid #ff4343 !important;
-  background: #ffe7e7 !important;
-  animation: shake 0.4s;
+/* Кнопка-редактирование */
+.edit {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-size: 1.2em;
+  cursor: pointer;
+  margin-left: 6px;
 }
 
-.modal-inner {
-  scroll-behavior: smooth;
-  background: #fff;
-  padding: 1.2em;
-  border-radius: 20px;
-  max-width: 350px;
-  width: 95%;
-  box-shadow: var(--shadow);
-  max-height: 90vh;
-  overflow-y: auto;
+/* ==== Теги и списки ==== */
+.tags-list {
+  margin: .4em 0 0;
+  padding: 0;
+  list-style: none;
+}
+.tags-list li {
+  padding: .2em 0;
 }
 
+.badge {
+  background: var(--color-accent);
+  color: var(--color-txt-badge);
+  border-radius: var(--radius-badge);
+  padding: .1em .7em;
+  font-size: 1em;
+}
+
+.small {
+  font-size: .92em;
+  color: var(--color-txt-small);
+}
+
+/* ==== Календарные кнопки ==== */
+.cal-btn {
+  font-size: 1rem;
+  padding: .2em 1em;
+  margin: .2em;
+  border-radius: var(--radius-calendar);
+  background: var(--color-bg-calendar);
+  border: none;
+  color: var(--color-txt-calendar);
+  cursor: pointer;
+}
+.cal-btn.selected {
+  background: var(--color-accent);
+  color: var(--color-bg-white);
+}
+
+/* ==== КНОПКИ В ПОДВАЛЕ ==== */
 .footer-bar {
   position: fixed;
-  left: 0; right: 0; bottom: 0;
-  background: #f5f8fe;
-  border-top: 1px solid #d7e2f7;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--color-bg-footer);
+  border-top: 1px solid var(--color-accent-light);
   display: flex;
   justify-content: space-around;
   align-items: stretch;
   z-index: 10;
-  height: 60px;
-  /* На маленьких экранах всегда видим */
+  height: var(--footer-height);
 }
 
 .footer-btn {
@@ -156,7 +238,7 @@ input.input-error {
   background: none;
   border: none;
   font-size: 1.20em;
-  color: var(--accent);
+  color: var(--color-accent);
   padding: 7px 0 3px 0;
   cursor: pointer;
   outline: none;
@@ -172,22 +254,78 @@ input.input-error {
 }
 .footer-btn:active,
 .footer-btn:focus {
-  background: #e0edff;
+  background: var(--color-bg-btn-active);
 }
 .footer-btn span {
   font-size: 0.74em;
-  color: #555;
+  color: var(--color-txt-grey);
   margin-top: 2px;
   font-weight: 400;
 }
 
-@media (max-width: 400px) {
-  .footer-bar { height: 48px; }
-  .footer-btn span { font-size: 0.70em; }
-  .footer-btn { font-size: 1.02em; }
+/* ==== МОДАЛЬНОЕ ОКНО ==== */
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #0002;
+  z-index: 22;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-inner {
+  scroll-behavior: smooth;
+  background: var(--color-bg-white);
+  padding: 1.2em;
+  border-radius: 20px;
+  max-width: 350px;
+  width: 95%;
+  box-shadow: var(--shadow);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.close-btn {
+  float: right;
+  background: none;
+  border: none;
+  color: #a44;
+  font-size: 1.4em;
+  cursor: pointer;
 }
 
-    
+/* ==== Экспорт, настройки ==== */
+.export {
+  background: var(--color-bg-export);
+  padding: .7em .8em;
+  border-radius: var(--radius-export);
+  margin-top: .6em;
+  color: var(--color-txt-export);
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: .5em 0;
+}
+select,
+input[type=number] {
+  font-size: 1em;
+  padding: .2em .3em;
+  border-radius: 8px;
+  border: 1px solid #bbb;
+}
+.sw-btn {
+  margin: .1em .2em;
+}
+
+/* ==== Состояния ошибок ==== */
+input.input-error {
+  border: 2px solid var(--color-txt-error) !important;
+  background: var(--color-input-error) !important;
+  animation: shake 0.4s;
+}
+
+/* ==== АНИМАЦИИ ==== */
 @keyframes shake {
   0% { transform: translateX(0px);}
   20% { transform: translateX(-5px);}
@@ -197,31 +335,36 @@ input.input-error {
   100% { transform: translateX(0px);}
 }
 
-    
-    /* EXPAND ON OLD PHONES */
-    @media (max-width: 400px) {
-      .container {padding:.5em .3em;margin-top:1vh;}
-      h1 {font-size:1.3rem;}
-      .btn {font-size:1rem;padding:.6em .2em;}
-    }
-    /* MODERN */
-    @media (min-width:401px) {
-      .container{margin-top:6vh;}
-    }
-    /* full width rows for mobile comfort */
-    .fullw {width:100%;display:block;}
-    .center{text-align:center;}
-    hr{margin:16px 0;}
+/* ==== МЕДИА ---- Мобилки, адаптив ==== */
+@media (max-width: 400px) {
+  :root {
+    --footer-height: 48px;
+  }
+  .container {
+    padding: .5em .3em;
+    margin-top: 1vh;
+  }
+  h1 {
+    font-size: 1.3rem;
+  }
+  .btn {
+    font-size: 1rem;
+    padding: .6em .2em;
+  }
+  .footer-btn span {
+    font-size: 0.70em;
+  }
+  .footer-btn {
+    font-size: 1.02em;
+  }
+}
 
-    .export {background:#fffbe7;padding:.7em .8em;border-radius:14px;margin-top:.6em;color:#993;}
-    .setting-row{display:flex;align-items:center;gap:7px;margin:.5em 0;}
-    select,input[type=number]{font-size:1em;padding:.2em .3em;border-radius:8px;border:1px solid #bbb;}
-    .badge{background:var(--accent);color:#fff;border-radius:8px;padding:.1em .7em;font-size:1em;}
-    .small{font-size:.92em;color:#888;}
-    .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:#0002;z-index:22;display:flex;align-items:center;justify-content:center;}
-    .modal-inner{background:#fff;padding:1.2em;border-radius:20px;max-width:350px;width:95%;box-shadow:var(--shadow);}
-    .close-btn{float:right;background:none;border:none;color:#a44;font-size:1.4em;cursor:pointer;}
-    .sw-btn{margin:.1em .2em;}
+/* ==== ДРУГОЙ МЕДИА-КВЕРИ для современных экранов ==== */
+@media (min-width: 401px) {
+  .container {
+    margin-top: 6vh;
+  }
+}
   </style>
 </head>
 <body>
