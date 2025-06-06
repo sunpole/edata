@@ -331,7 +331,38 @@ input.input-error {
   background:var(--color-bg-export);
   padding:.7em .8em; border-radius:var(--radius-export);
   margin-top:.6em; color:var(--color-txt-export);
+  box-shadow: 0 2px 12px #d7dcaf29;
 }
+/* Добавим стиль для textarea внутри экспорта */
+.export textarea {
+  border-radius:9px;
+  outline:none;
+  border:1.2px solid var(--color-accent-xlight);
+  background: #fffdec;
+  padding:.7em .9em;
+  font-size:1em;
+  width:98%;
+  min-height:110px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 6px #b7b07130;
+  color:#625440;
+  resize:vertical;
+}
+body.dark-theme .export textarea {
+  background: #24241e;
+  color: #dcc;
+}
+
+/* Кнопочки в разделе экспорта - делаем компактнее, но читаемыми */
+.export .btn {
+  margin-top:7px;
+  font-size:1em;
+  padding:.5em 1em;
+  border-radius:10px;
+}
+.export .btn:first-of-type { margin-top:12px; }
+
+/* ==== Ряд с фильтрами в экспорте ==== */
 .setting-row {
   display:flex; align-items:center; gap:7px; margin:.5em 0;
 }
@@ -360,11 +391,14 @@ input.input-error {
   .btn { font-size:1rem; padding:.6em .2em;}
   .footer-btn span { font-size: 0.70em;}
   .footer-btn { font-size: 1.02em;}
+  .export textarea { font-size:.95em; }
 }
 @media (min-width: 401px) {
   .container { margin-top:6vh;}
 }
 </style>
+
+  
 </head>
 <body>
 <div class="container" id="app"></div>
@@ -384,102 +418,282 @@ input.input-error {
 
 
   
-<script>  
-/** ================================================================  
- *    TIME TRACKER — основной js-файл приложения  
- *    Все функции, UI и логика  
- * ================================================================ */  
+<script>
+/** ================================================================
+ *    TIME TRACKER — основной js-файл приложения
+ *    Все функции, UI и логика
+ * ================================================================ */
 
-/** === CONSTANTS =============== */  
-const STORAGE_KEY  = "myworkdays22";  
-const SETTINGS_KEY = "myworkdays_settings";  
-const DEFAULT_TAG  = "НАСТРОЙКА ОБОРУДОВАНИЯ";  
-const APP_VERSION  = "1.0.0 (2024-06-05)"; // для About  
+/** === CONSTANTS =============== */
+const STORAGE_KEY  = "myworkdays22";
+const SETTINGS_KEY = "myworkdays_settings";
+const DEFAULT_TAG  = "НАСТРОЙКА ОБОРУДОВАНИЯ";
+const APP_VERSION  = "1.0.0 (2024-06-05)"; // для About
 
-/** === LOCALSTORAGE — INIT =============== */  
+/** === LOCALSTORAGE — INIT =============== */
 
 // Основной массив дней с тэгами  
-let days = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");  
+let days = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 // Список тэгов  
-let tagsLib = JSON.parse(localStorage.getItem("tagsLib22") || "[]");  
-if (!Array.isArray(tagsLib) || tagsLib.length === 0) {  
-  tagsLib = [DEFAULT_TAG];  
-} else if (!tagsLib.includes(DEFAULT_TAG)) {  
-  tagsLib.unshift(DEFAULT_TAG);  
-}  
+let tagsLib = JSON.parse(localStorage.getItem("tagsLib22") || "[]");
+if (!Array.isArray(tagsLib) || tagsLib.length === 0) {
+  tagsLib = [DEFAULT_TAG];
+} else if (!tagsLib.includes(DEFAULT_TAG)) {
+  tagsLib.unshift(DEFAULT_TAG);
+}
 // Глобальные настройки UI/защиты  
-let appSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');  
-if (typeof appSettings.copyProtect === "undefined") appSettings.copyProtect = false;  
-if (typeof appSettings.noZoom === "undefined") appSettings.noZoom = false;  
-if (typeof appSettings.theme === "undefined") appSettings.theme = "light";  
-if (typeof appSettings.autoTheme === "undefined") appSettings.autoTheme = true;  
+let appSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+if (typeof appSettings.copyProtect === "undefined") appSettings.copyProtect = false;
+if (typeof appSettings.noZoom === "undefined") appSettings.noZoom = false;
+if (typeof appSettings.theme === "undefined") appSettings.theme = "light";
+if (typeof appSettings.autoTheme === "undefined") appSettings.autoTheme = true;
 
-// =========== SETTINGS HELPERS ==================  
-function saveSettings() {  
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));  
-}  
-function saveAll() {  
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(days));  
-  localStorage.setItem("tagsLib22", JSON.stringify(tagsLib));  
-}  
+// =========== SETTINGS HELPERS ==================
+function saveSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
+}
+function saveAll() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(days));
+  localStorage.setItem("tagsLib22", JSON.stringify(tagsLib));
+}
 
-/** === UI-BEHAVIOR INIT ============ */  
-function updateCopyProtect() {  
-  if (appSettings.copyProtect) {  
-    document.body.addEventListener('copy', blockCopy, true);  
-    document.body.style.userSelect = "none";  
-  } else {  
-    document.body.removeEventListener('copy', blockCopy, true);  
-    document.body.style.userSelect = "";  
-  }  
-}  
-function blockCopy(e) { e.preventDefault(); }  
+/** === UI-BEHAVIOR INIT ============ */
+function updateCopyProtect() {
+  if (appSettings.copyProtect) {
+    document.body.addEventListener('copy', blockCopy, true);
+    document.body.style.userSelect = "none";
+  } else {
+    document.body.removeEventListener('copy', blockCopy, true);
+    document.body.style.userSelect = "";
+  }
+}
+function blockCopy(e) { e.preventDefault(); }
 
-function updateNoZoom() {  
-  let viewport = document.querySelector('meta[name="viewport"]');  
-  if (viewport) {  
-    if (appSettings.noZoom) {  
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');  
-    } else {  
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');  
-    }  
-  }  
-}  
-function updateTheme() {  
-  if (appSettings.autoTheme && window.matchMedia) {  
-    appSettings.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';  
-  }  
-  document.body.classList.toggle("dark-theme", appSettings.theme === "dark");  
-}  
-if (window.matchMedia) {  
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=> {  
-    if(appSettings.autoTheme) updateTheme();  
-  });  
-}  
+function updateNoZoom() {
+  let viewport = document.querySelector('meta[name="viewport"]');
+  if (viewport) {
+    if (appSettings.noZoom) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    } else {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+    }
+  }
+}
+function updateTheme() {
+  if (appSettings.autoTheme && window.matchMedia) {
+    appSettings.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  document.body.classList.toggle("dark-theme", appSettings.theme === "dark");
+}
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=> {
+    if(appSettings.autoTheme) updateTheme();
+  });
+}
 
-/** === BASIC HELPERS ======================= */  
-function findDay(date)      { return days.find(d => d.date === date); }  
-function todayStr()         { return (new Date()).toISOString().slice(0,10); }  
-function toHM(dt)           { let [h,m]=dt.split(":").map(Number); return [h||0,m||0]; }  
-function fromHM(h, m)       { return (h<10?'0':'')+h+":"+(m<10?'0':'')+m; }  
-function roundTime(timeStr, roundMin=10, direction='round') {  
-  let [h, m] = toHM(timeStr);  
-  let total = h*60+m, q = total / roundMin, res;  
-  if(direction==='down') res = Math.floor(q);  
-  else if(direction==='up') res = Math.ceil(q);  
-  else res = Math.round(q);  
-  total = res*roundMin; h = Math.floor(total/60); m = total%60;  
-  return fromHM(h, m);  
-}  
-function diffMinutes(tm1, tm2) {  
-  let [h1,m1]=toHM(tm1), [h2,m2]=toHM(tm2);  
-  return (h2*60+m2)-(h1*60+m1);  
-}  
+/** === BASIC HELPERS ======================= */
+function findDay(date)      { return days.find(d => d.date === date); }
+function todayStr()         { return (new Date()).toISOString().slice(0,10); }
+function toHM(dt)           { let [h,m]=dt.split(":").map(Number); return [h||0,m||0]; }
+function fromHM(h, m)       { return (h<10?'0':'')+h+":"+(m<10?'0':'')+m; }
+function roundTime(timeStr, roundMin=10, direction='round') {
+  let [h, m] = toHM(timeStr);
+  let total = h*60+m, q = total / roundMin, res;
+  if(direction==='down') res = Math.floor(q);
+  else if(direction==='up') res = Math.ceil(q);
+  else res = Math.round(q);
+  total = res*roundMin; h = Math.floor(total/60); m = total%60;
+  return fromHM(h, m);
+}
+function diffMinutes(tm1, tm2) {
+  let [h1,m1]=toHM(tm1), [h2,m2]=toHM(tm2);
+  return (h2*60+m2)-(h1*60+m1);
+}
 
-// == INIT UI SETTINGS ==  
-updateCopyProtect();  
-updateNoZoom();  
-updateTheme();  
+// == INIT UI SETTINGS ==
+updateCopyProtect();
+updateNoZoom();
+updateTheme();
+
+
+
+/* === ВАЖНО!!!: ЭКСПОРТ ОТЧЁТА === */
+function showExport() {
+  let minDate = days.length ? days[0].date : todayStr();
+  let maxDate = days.length ? days[days.length-1].date : todayStr();
+  let html = `
+    <div><b>Экспортировать отчёт</b></div>
+    <form id="reportForm">
+      <div class="setting-row">Период: 
+        <select id="per">
+          <option value="1-15">1–15</option>
+          <option value="16-31">16–31</option>
+          <option value="full">Весь месяц</option>
+          <option value="range">Период</option>
+        </select>
+        <input type="date" id="dfrom" style="display:none" value="${minDate}"> -
+        <input type="date" id="dto" style="display:none" value="${maxDate}">
+      </div>
+      <div class="setting-row">Экспорт:
+        <select id="expType">
+          <option value="all">Всё</option>
+          <option value="tags">Только теги</option>
+          <option value="work">Только рабочие часы (приход/уход)</option>
+        </select>
+      </div>
+      <div class="setting-row">Округление:
+        <select id="roundM">
+          <option value="60">До 1 часа</option>
+          <option value="30">До 30 мин</option>
+          <option value="10" selected>До 10 мин</option>
+        </select>
+        <select id="roundDir">
+          <option value="round">Обычно</option>
+          <option value="up">Вверх</option>
+          <option value="down">Вниз</option>
+        </select>
+      </div>
+      <div class="setting-row">Теги: <select multiple id="tagsFlt" style="min-width:70px;min-height:2em;">
+        ${tagsLib.map(t=>`<option value="${t}" selected>${t}</option>`).join("")}
+      </select> <span class="small">(для режима "теги")</span></div>
+      <button class="btn fullw" type="submit">Экспортировать</button>
+      <button class="btn fullw" type="button" onclick="closeModal()">Отмена</button>
+    </form>
+    <div id="exportResult"></div>
+  `;
+  showModal(html);
+
+  let perSel = document.getElementById("per");
+  let fromD = document.getElementById("dfrom");
+  let toD = document.getElementById("dto");
+  perSel.onchange = function() {
+    if(perSel.value==='range'){
+      fromD.style.display='inline';
+      toD.style.display='inline';
+    } else {
+      fromD.style.display='none';
+      toD.style.display='none';
+    }
+  };
+
+  document.getElementById("reportForm").onsubmit = function(e) {
+    e.preventDefault();
+    let period = perSel.value;
+    let from = fromD.value || minDate;
+    let to = toD.value || maxDate;
+    let exp = document.getElementById("expType").value;
+    let roundM = +document.getElementById("roundM").value;
+    let roundDir = document.getElementById("roundDir").value;
+    let tagsFlt = Array.from(document.getElementById("tagsFlt").selectedOptions).map(op=>op.value);
+
+    let list;
+    if (period === "1-15") {
+      list = days.filter(d=>+d.date.slice(8,10)<=15 && inThisMonth(d.date));
+    } else if(period === "16-31") {
+      list = days.filter(d=>+d.date.slice(8,10)>=16 && inThisMonth(d.date));
+    } else if(period === "range") {
+      list = days.filter(d=>d.date >= from && d.date <= to);
+    } else { // full
+      list = days.filter(d=>inThisMonth(d.date));
+    }
+    function inThisMonth(dt) {
+      let selm = days.length ? days[days.length-1].date.slice(5,7) : todayStr().slice(5,7);
+      return dt.slice(5,7)===selm;
+    }
+
+    let rows = [];
+    let tagTotals = {};
+
+    if(exp==='work'||exp==='all'){
+      for(const d of list) {
+        let s = d.start?roundTime(d.start, roundM, roundDir):"", e = d.end?roundTime(d.end, roundM, roundDir):"";
+        if(!s || !e) continue;
+        let mins = diffMinutes(s,e);
+        let hr = Math.floor(mins/60), mn = mins%60;
+        rows.push(`${d.date}: ${s} – ${e} (${hr}ч ${mn}м)`);
+      }
+    }
+    if(exp==='tags'||exp==='all'){
+      for(const d of list) {
+        if(!d.tags?.length) continue;
+        for(const tag of d.tags) {
+          if(tagsFlt.includes(tag.tag)){
+            let st = roundTime(tag.start, roundM, roundDir),
+                en = roundTime(tag.end, roundM, roundDir);
+            let mins = diffMinutes(st, en);
+            if (!tagTotals[tag.tag]) tagTotals[tag.tag] = 0;
+            tagTotals[tag.tag] += mins > 0 ? mins : 0;
+            let hr = Math.floor(mins/60), mn = mins%60;
+            rows.push(`${d.date}: ${tag.tag} — ${st}-${en} (${hr}ч ${mn}м)`);
+          }
+        }
+      }
+      if(Object.keys(tagTotals).length){
+        rows.push('\nСуммарно по тегам:');
+        for(const tag of Object.keys(tagTotals)){
+          let tot = tagTotals[tag], hr = Math.floor(tot/60), mn = tot%60;
+          rows.push(`${tag}: ${hr}ч ${mn}м`);
+        }
+      }
+    }
+    let resTxt = rows.join('\n');
+    document.getElementById("exportResult").innerHTML =
+      `<div class="export"><b>Готовый текст:</b><br>
+      <textarea style="width:98%;min-height:120px">${resTxt}</textarea>
+      <br>
+      <button class="btn" type="button" onclick="downloadText()">Скачать .txt</button>
+      <button class="btn" type="button" onclick="copyExportText()">Скопировать</button>
+      <button class="btn" type="button" onclick="shareToTelegram()">Отправить в Telegram</button>
+      </div>`;
+    window.export__text = resTxt;
+    return false;
+  };
+}
+
+// --- КНОПКА "отправить в телеграм" ---
+function shareToTelegram() {
+  if (!window.export__text) return;
+  let text = window.export__text;
+  if (text.length > 4000) text = text.slice(0, 4000) + '...';
+  let url = "https://t.me/share/url?url=&text=" + encodeURIComponent(text);
+  window.open(url, "_blank");
+}
+
+// --- КНОПКА "скопировать в буфер" ---
+function copyExportText() {
+  if (!window.export__text) return;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(window.export__text)
+      .then(() => { alert("Текст скопирован!"); })
+      .catch(() => { fallbackCopy(); });
+  } else {
+    fallbackCopy();
+  }
+  function fallbackCopy() {
+    try {
+      let ta = document.createElement("textarea");
+      ta.value = window.export__text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      alert("Текст скопирован!");
+    } catch {
+      alert("Не удалось скопировать.");
+    }
+  }
+}
+
+// --- КНОПКА "скачать txt" ---
+function downloadText() {
+  let b = new Blob([window.export__text || ""], {type:"text/plain"});
+  let link = document.createElement("a");
+  link.href = URL.createObjectURL(b);
+  link.download = "work_report.txt";
+  link.click();
+}
+
+
 
 /** =========================================================  
  *               MAIN RENDER FUNCTION (главная страница)  
