@@ -517,7 +517,15 @@ updateTheme();
 
 
 
-/* === ВАЖНО!!!: ЭКСПОРТ ОТЧЁТА === */
+function roundMinutes(totalMin, step=10, direction='round') {
+  let q = totalMin / step, res;
+  if(direction==='down') res = Math.floor(q);
+  else if(direction==='up') res = Math.ceil(q);
+  else res = Math.round(q);
+  return res * step;
+}
+
+/* === ЭКСПОРТ ОТЧЁТА === */
 function showExport() {
   let minDate = days.length ? days[0].date : todayStr();
   let maxDate = days.length ? days[days.length-1].date : todayStr();
@@ -598,44 +606,49 @@ function showExport() {
     }
     function inThisMonth(dt) {
       let selm = days.length ? days[days.length-1].date.slice(5,7) : todayStr().slice(5,7);
-      return dt.slice(5,7)===selm;
+      return dt.slice(5,7) === selm;
     }
 
     let rows = [];
     let tagTotals = {};
 
-    if(exp==='work'||exp==='all'){
-      for(const d of list) {
-        let s = d.start?roundTime(d.start, roundM, roundDir):"", e = d.end?roundTime(d.end, roundM, roundDir):"";
-        if(!s || !e) continue;
-        let mins = diffMinutes(s,e);
-        let hr = Math.floor(mins/60), mn = mins%60;
-        rows.push(`${d.date}: ${s} – ${e} (${hr}ч ${mn}м)`);
+    // ===== ОТЧЁТ ПО РАБОЧЕМУ ВРЕМЕНИ =====
+    if (exp === 'work' || exp === 'all') {
+      for (const d of list) {
+        if (!d.start || !d.end) continue;
+        let mins = diffMinutes(d.start, d.end);
+        let rounded = roundMinutes(mins, roundM, roundDir);
+        let hr = Math.floor(rounded / 60), mn = rounded % 60;
+        rows.push(`${d.date}: ${d.start} – ${d.end} (${hr}ч ${mn}м)`);
       }
     }
-    if(exp==='tags'||exp==='all'){
-      for(const d of list) {
-        if(!d.tags?.length) continue;
-        for(const tag of d.tags) {
-          if(tagsFlt.includes(tag.tag)){
-            let st = roundTime(tag.start, roundM, roundDir),
-                en = roundTime(tag.end, roundM, roundDir);
-            let mins = diffMinutes(st, en);
+
+    // ===== ОТЧЁТ ПО ТЕГАМ =====
+    if (exp === 'tags' || exp === 'all') {
+      for (const d of list) {
+        if (!d.tags?.length) continue;
+        for (const tag of d.tags) {
+          if (tagsFlt.includes(tag.tag)) {
+            let mins = diffMinutes(tag.start, tag.end);
             if (!tagTotals[tag.tag]) tagTotals[tag.tag] = 0;
             tagTotals[tag.tag] += mins > 0 ? mins : 0;
-            let hr = Math.floor(mins/60), mn = mins%60;
-            rows.push(`${d.date}: ${tag.tag} — ${st}-${en} (${hr}ч ${mn}м)`);
+            let rounded = roundMinutes(mins, roundM, roundDir);
+            let hr = Math.floor(rounded / 60), mn = rounded % 60;
+            rows.push(`${d.date}: ${tag.tag} — ${tag.start}-${tag.end} (${hr}ч ${mn}м)`);
           }
         }
       }
-      if(Object.keys(tagTotals).length){
+      if (Object.keys(tagTotals).length) {
         rows.push('\nСуммарно по тегам:');
-        for(const tag of Object.keys(tagTotals)){
-          let tot = tagTotals[tag], hr = Math.floor(tot/60), mn = tot%60;
+        for (const tag of Object.keys(tagTotals)) {
+          let tot = tagTotals[tag];
+          let rounded = roundMinutes(tot, roundM, roundDir);
+          let hr = Math.floor(rounded / 60), mn = rounded % 60;
           rows.push(`${tag}: ${hr}ч ${mn}м`);
         }
       }
     }
+
     let resTxt = rows.join('\n');
     document.getElementById("exportResult").innerHTML =
       `<div class="export"><b>Готовый текст:</b><br>
@@ -650,7 +663,7 @@ function showExport() {
   };
 }
 
-// --- КНОПКА "отправить в телеграм" ---
+// --- ОТПРАВИТЬ В TELEGRAM ---
 function shareToTelegram() {
   if (!window.export__text) return;
   let text = window.export__text;
@@ -659,7 +672,7 @@ function shareToTelegram() {
   window.open(url, "_blank");
 }
 
-// --- КНОПКА "скопировать в буфер" ---
+// --- СКОПИРОВАТЬ В БУФЕР ---
 function copyExportText() {
   if (!window.export__text) return;
   if (navigator.clipboard) {
@@ -684,16 +697,17 @@ function copyExportText() {
   }
 }
 
-// --- КНОПКА "скачать txt" ---
+// --- СКАЧАТЬ TXT ---
 function downloadText() {
-  let b = new Blob([window.export__text || ""], {type:"text/plain"});
+  let b = new Blob([window.export__text || ""], { type:"text/plain" });
   let link = document.createElement("a");
   link.href = URL.createObjectURL(b);
   link.download = "work_report.txt";
   link.click();
 }
+  
 
-
+  
 
 /** =========================================================  
  *               MAIN RENDER FUNCTION (главная страница)  
@@ -1145,6 +1159,7 @@ function showAbout() {
   showModal(html);
 }
 
+  
 /** === MODAL CORE === */
 function showModal(html) {
   let m = document.getElementById("modal");
