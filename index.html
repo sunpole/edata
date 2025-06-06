@@ -980,7 +980,7 @@ function showDay(ds) {
     window.export__text = resTxt;
     return false;
   };
-}
+
 function downloadText() {
   let b = new Blob([window.export__text || ""], {type:"text/plain"});
   let link = document.createElement("a");
