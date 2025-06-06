@@ -16,51 +16,81 @@
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   
   <title>Тайм-трекер | Мой рабочий день</title>
+  
   <style>
-    :root {
-  /* Цвета основного интерфейса */
-  --color-accent: #3a7afe;
-  --color-accent-light: #b3d1fd;
-  --color-bg: #eef3fa;
-  --color-bg-white: #fff;
-  --color-bg-footer: #f5f8fe;
-  --color-bg-btn-active: #e4eaff;
-  --color-bg-dual-btn: #cafaff;
+:root {
+  /* ------ Цвета (основные и вспомогательные) ------ */
+  --color-accent:           #3a7afe;
+  --color-accent-hover:     #236dfc;
+  --color-accent-light:     #b3d1fd;
+  --color-accent-xlight:    #e4eaff;
+  --color-bg:               #eef3fa;
+  --color-bg-white:         #fff;
+  --color-bg-footer:        #f5f8fe;
+  --color-bg-btn-active:    #e4eaff;
+  --color-bg-dual-btn:      #cafaff;
   --color-bg-dual-btn-last: #e4eaff;
-  --color-bg-calendar: #e8f1ff;
-  --color-bg-export: #fffbe7;
-  --color-input-error: #ffe7e7;
+  --color-bg-calendar:      #e8f1ff;
+  --color-bg-export:        #fffbe7;
+  --color-input-error:      #ffe7e7;
 
-  --color-txt: #222;
-  --color-txt-grey: #555;
-  --color-txt-accent: #2995fa;
-  --color-txt-small: #888;
-  --color-txt-export: #993;
-  --color-txt-calendar: #217;
-  --color-txt-badge: #fff;
-  --color-txt-error: #ff4343;
+  --color-txt:           #222;
+  --color-txt-grey:      #555;
+  --color-txt-accent:    #2995fa;
+  --color-txt-small:     #888;
+  --color-txt-export:    #993;
+  --color-txt-calendar:  #217;
+  --color-txt-badge:     #fff;
+  --color-txt-error:     #ff4343;
 
-  --radius-main: 18px;
-  --radius-calendar: 12px;
-  --radius-export: 14px;
-  --radius-badge: 8px;
-  --shadow: 0 3px 20px #0001;
+  /* Остальное */
+  --radius-main:      18px;
+  --radius-calendar:  12px;
+  --radius-export:    14px;
+  --radius-badge:     8px;
+  --shadow:           0 3px 20px #0001;
+  --footer-height:    60px;
 
-  --footer-height: 60px;
-
-  /* Отступы */
   --container-padding-v: 1.5rem;
   --container-padding-h: 1rem;
   --container-padding-bottom: 80px;
 }
 
-/* ===== БАЗОВАЯ СЕТКА ===== */
+/* ----- Тёмная тема ----- */
+body.dark-theme {
+  --color-accent:           #4f8dff;
+  --color-accent-hover:     #266ce5;
+  --color-accent-light:     #3666e680;
+  --color-accent-xlight:    #262c3f;
+  --color-bg:               #23252a;
+  --color-bg-white:         #23252a;
+  --color-bg-footer:        #242830;
+  --color-bg-btn-active:    #313641;
+  --color-bg-dual-btn:      #242830;
+  --color-bg-dual-btn-last: #323844;
+  --color-bg-calendar:      #2a2d35;
+  --color-bg-export:        #191b16;
+  --color-input-error:      #691818;
+  --color-txt:           #f4f6fd;
+  --color-txt-grey:      #aab2c8;
+  --color-txt-accent:    #8bb8ff;
+  --color-txt-small:     #8d99b4;
+  --color-txt-export:    #cca;
+  --color-txt-calendar:  #9ac2ff;
+  --color-txt-badge:     #fff;
+  --color-txt-error:     #ff4343;
+}
+
+/* === Базовая сетка и плавность === */
+body, .container, .footer-bar, .btn, .dual-btn, .modal-inner, .export {
+  transition: background .22s, color .22s, border-color .22s;
+}
 body {
   background: var(--color-bg);
   color: var(--color-txt);
   margin: 0;
   padding: 0;
-  font-family: system-ui, sans-serif;
+  font-family: system-ui,sans-serif;
   min-height: 100vh;
 }
 
@@ -74,7 +104,6 @@ body {
   margin-top: 3vh;
   box-shadow: var(--shadow);
 }
-
 h1 {
   margin: 0 0 12px;
   font-size: 2rem;
@@ -83,293 +112,259 @@ h1 {
   text-align: center;
 }
 
+/* ===== FLEX GRID/COMMON ===== */
 .row {
   display: flex;
   gap: 10px;
   margin-bottom: 12px;
 }
-
 .row-col {
   flex-direction: column;
   gap: 6px;
 }
+.fullw { width:100%; display:block; }
+.center { text-align:center; }
+hr { margin:16px 0; }
 
-.fullw {
-  width: 100%;
-  display: block;
-}
-
-.center {
-  text-align: center;
-}
-
-hr {
-  margin: 16px 0;
-}
-
-/* ====== ДВОЙНЫЕ КНОПКИ ====== */
-.dual-btn {
-  display: flex;
-  flex-direction: row;
-  flex: 1 1 0;
-  border-radius: var(--radius-main);
-  overflow: hidden;
-  border: 2px solid var(--color-accent);
-}
-
-.dual-btn .btn {
-  border: none;
-  border-radius: 0;
-  font-size: 1.2rem;
-  background: var(--color-bg-white);
-  color: var(--color-accent);
-  box-shadow: none;
-  flex: 1 1 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  padding: 0.85em 0.5em;
-}
-
-.dual-btn .btn:first-child {
-  border-right: 1px solid var(--color-accent-light);
+/* ========== Кастомные элементы форм ========== */
+/* --- ЧЕКБОКСЫ --- */
+input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width:36px; height:20px; border-radius:16px;
   background: var(--color-bg-dual-btn);
+  border:2px solid var(--color-accent-light);
+  position: relative;
+  outline: none; cursor: pointer;
+  vertical-align: middle;
+  transition: background .18s, border-color .22s;
+  margin-right:10px; box-shadow:none;
 }
-.dual-btn .btn:last-child {
-  background: var(--color-bg-dual-btn-last);
+input[type="checkbox"]:checked {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
 }
-
-/* Основная кнопка */
-.btn {
+input[type="checkbox"]::before {
+  content:''; position:absolute; left:3px; top:3px;
+  width:14px; height:14px; border-radius:50%;
   background: var(--color-bg-white);
-  border: 2px solid var(--color-accent);
-  color: var(--color-accent);
-  border-radius: var(--radius-main);
-  font-size: 1.3rem;
-  padding: 1em 1em;
-  flex: 1 1 auto;
-  font-weight: 500;
-  cursor: pointer;
-  transition: 0.1s;
-  box-shadow: var(--shadow);
+  transition: transform .18s, background .22s;
+  box-shadow: 0 2px 7px #0001;
+}
+input[type="checkbox"]:checked::before {
+  transform: translateX(16px);
+  background: var(--color-bg-white);
+}
+input[type="checkbox"]:focus-visible {
+  outline:2px solid var(--color-accent); outline-offset:2px;
 }
 
-.btn.active,
-.btn:active {
-  background: var(--color-bg-btn-active);
-  color: var(--color-bg-white);
+/* --- SELECT --- */
+select {
+  appearance: none; -webkit-appearance: none;
+  background: var(--color-bg-dual-btn);
+  color: var(--color-txt);
+  border:2px solid var(--color-accent-light);
+  border-radius:12px;
+  font-size:1em;
+  padding: 0.34em 2.2em 0.34em 0.7em;
+  outline: none;
+  margin-right:7px; min-width:70px;
+  transition: background .22s, color .22s, border-color .22s;
+  box-shadow: none; cursor:pointer; position:relative;
+}
+select:focus-visible, select:focus { border-color:var(--color-accent); }
+select[multiple] { min-height:2.4em; }
+select:not([multiple]) {
+  background-image: url('data:image/svg+xml;utf8,<svg height="18" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M4 7l5 5 5-5" stroke="%23666" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+  background-repeat:no-repeat;
+  background-position:right 0.7em center;
+  background-size: 1.2em 1.2em;
+}
+body.dark-theme select:not([multiple]) {
+  background-image: url('data:image/svg+xml;utf8,<svg height="18" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M4 7l5 5 5-5" stroke="%23aabafc" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+}
+
+/* --- NUMBER INPUT --- */
+input[type="number"] {
+  background: var(--color-bg-dual-btn);
+  color: var(--color-txt);
+  border:2px solid var(--color-accent-light);
+  border-radius:10px; font-size:1em;
+  padding:0.28em 0.7em; outline:none;
+  margin-right:5px; box-shadow:none;
+  transition: background .22s, color .22s, border-color .22s;
+}
+input[type="number"]:focus { border-color: var(--color-accent); }
+
+/* --- Generic text input? (ненавязчиво) --- */
+input[type="text"], input[type="time"] {
+  background: var(--color-bg-dual-btn);
+  color: var(--color-txt);
+  border: 2px solid var(--color-accent-light);
+  border-radius: 10px;
+  font-size: 1em;
+  padding: .28em .7em;
+  outline: none;
+  transition: background .22s, color .22s, border-color .22s;
+  box-shadow: none;
+}
+input[type="text"]:focus, input[type="time"]:focus {
   border-color: var(--color-accent);
 }
 
-/* Вспомогательный подзаголовок на кнопках */
-.btn-sub {
-  font-size: 0.76em;
-  color: var(--color-txt-accent);
-  margin-top: 2px;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  line-height: 1;
+/* --- Input Error --- */
+input.input-error {
+  border: 2px solid var(--color-txt-error) !important;
+  background: var(--color-input-error) !important;
+  animation: shake .4s;
 }
 
+/* ==== Dual-кнопки & Основные кнопки ==== */
+.dual-btn {
+  display:flex; flex-direction:row; flex:1 1 0;
+  border-radius:var(--radius-main); overflow:hidden;
+  border:2px solid var(--color-accent);
+}
+.dual-btn .btn {
+  border:none; border-radius:0; font-size:1.2rem;
+  background:var(--color-bg-white);
+  color:var(--color-accent);
+  box-shadow:none; flex:1 1 0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  min-width:0; padding:0.85em 0.5em;
+}
+.dual-btn .btn:first-child { border-right:1px solid var(--color-accent-light); background:var(--color-bg-dual-btn);}
+.dual-btn .btn:last-child  { background:var(--color-bg-dual-btn-last);}
+.btn {
+  background:var(--color-bg-white);
+  border:2px solid var(--color-accent);
+  color:var(--color-accent);
+  border-radius:var(--radius-main);
+  font-size:1.3rem; padding:1em 1em;
+  flex: 1 1 auto; font-weight:500;
+  cursor:pointer; transition:.1s;
+  box-shadow:var(--shadow);
+}
+.btn.active, .btn:active {
+  background:var(--color-bg-btn-active);
+  color:var(--color-bg-white);
+  border-color:var(--color-accent);
+}
+.btn-sub {
+  font-size:.76em; color:var(--color-txt-accent);
+  margin-top:2px; font-weight:400;
+  letter-spacing:.02em; line-height:1;
+}
 /* Кнопка-редактирование */
 .edit {
-  background: none;
-  border: none;
-  color: var(--color-accent);
-  font-size: 1.2em;
-  cursor: pointer;
-  margin-left: 6px;
+  background:none; border:none;
+  color:var(--color-accent);
+  font-size:1.2em; cursor:pointer; margin-left:6px;
 }
 
-/* ==== Теги и списки ==== */
-.tags-list {
-  margin: .4em 0 0;
-  padding: 0;
-  list-style: none;
-}
-.tags-list li {
-  padding: .2em 0;
-}
-
+/* ===== Теги и списки ===== */
+.tags-list { margin:.4em 0 0; padding:0; list-style:none;}
+.tags-list li { padding:.2em 0; }
 .badge {
-  background: var(--color-accent);
-  color: var(--color-txt-badge);
-  border-radius: var(--radius-badge);
-  padding: .1em .7em;
-  font-size: 1em;
+  background:var(--color-accent);
+  color:var(--color-txt-badge);
+  border-radius:var(--radius-badge);
+  padding:.1em .7em; font-size:1em;
 }
-
-.small {
-  font-size: .92em;
-  color: var(--color-txt-small);
-}
+.small { font-size:.92em; color:var(--color-txt-small); }
 
 /* ==== Календарные кнопки ==== */
 .cal-btn {
-  font-size: 1rem;
-  padding: .2em 1em;
-  margin: .2em;
-  border-radius: var(--radius-calendar);
-  background: var(--color-bg-calendar);
-  border: none;
-  color: var(--color-txt-calendar);
-  cursor: pointer;
+  font-size:1rem; padding:.2em 1em;
+  margin:.2em; border-radius:var(--radius-calendar);
+  background:var(--color-bg-calendar);
+  border: none; color: var(--color-txt-calendar); cursor:pointer;
 }
-.cal-btn.selected {
-  background: var(--color-accent);
-  color: var(--color-bg-white);
-}
+.cal-btn.selected { background:var(--color-accent); color:var(--color-bg-white);}
+.sw-btn { margin:.1em .2em; }
 
 /* ==== КНОПКИ В ПОДВАЛЕ ==== */
 .footer-bar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: fixed; left:0; right:0; bottom:0;
   background: var(--color-bg-footer);
   border-top: 1px solid var(--color-accent-light);
-  display: flex;
-  justify-content: space-around;
-  align-items: stretch;
-  z-index: 10;
-  height: var(--footer-height);
+  display: flex; justify-content: space-around; align-items: stretch;
+  z-index: 10; height: var(--footer-height);
 }
-
 .footer-btn {
-  flex: 1 1 0;
-  background: none;
-  border: none;
-  font-size: 1.20em;
-  color: var(--color-accent);
-  padding: 7px 0 3px 0;
-  cursor: pointer;
-  outline: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  transition: background 0.15s;
-  border-radius: 0;
-  line-height: 1.0;
-  min-width: 0;
-  user-select: none;
+  flex:1 1 0; background:none; border:none; font-size:1.20em;
+  color:var(--color-accent);
+  padding:7px 0 3px 0;
+  cursor:pointer; outline:none;
+  display:flex; flex-direction:column; align-items:center; gap:0;
+  transition:background .15s;
+  border-radius:0; line-height:1.0; min-width:0;
+  user-select:none;
 }
-.footer-btn:active,
-.footer-btn:focus {
-  background: var(--color-bg-btn-active);
-}
+.footer-btn:active, .footer-btn:focus { background:var(--color-bg-btn-active);}
 .footer-btn span {
-  font-size: 0.74em;
-  color: var(--color-txt-grey);
-  margin-top: 2px;
-  font-weight: 400;
+  font-size:.74em; color:var(--color-txt-grey);
+  margin-top:2px; font-weight:400;
 }
 
 /* ==== МОДАЛЬНОЕ ОКНО ==== */
 .modal {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: #0002;
-  z-index: 22;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: fixed; top:0; left:0; right:0; bottom:0;
+  background: #0002; z-index:22;
+  display:flex; align-items:center; justify-content:center;
 }
 .modal-inner {
-  scroll-behavior: smooth;
-  background: var(--color-bg-white);
-  padding: 1.2em;
-  border-radius: 20px;
-  max-width: 350px;
-  width: 95%;
-  box-shadow: var(--shadow);
-  max-height: 90vh;
-  overflow-y: auto;
+  scroll-behavior: smooth; background:var(--color-bg-white);
+  padding:1.2em; border-radius:20px;
+  max-width:350px; width:95%;
+  box-shadow:var(--shadow);
+  max-height:90vh; overflow-y:auto;
 }
 .close-btn {
-  float: right;
-  background: none;
-  border: none;
-  color: #a44;
-  font-size: 1.4em;
-  cursor: pointer;
+  float:right; background:none;
+  border:none; color:#a44; font-size:1.4em; cursor:pointer;
 }
 
 /* ==== Экспорт, настройки ==== */
 .export {
-  background: var(--color-bg-export);
-  padding: .7em .8em;
-  border-radius: var(--radius-export);
-  margin-top: .6em;
-  color: var(--color-txt-export);
+  background:var(--color-bg-export);
+  padding:.7em .8em; border-radius:var(--radius-export);
+  margin-top:.6em; color:var(--color-txt-export);
 }
 .setting-row {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin: .5em 0;
-}
-select,
-input[type=number] {
-  font-size: 1em;
-  padding: .2em .3em;
-  border-radius: 8px;
-  border: 1px solid #bbb;
-}
-.sw-btn {
-  margin: .1em .2em;
+  display:flex; align-items:center; gap:7px; margin:.5em 0;
 }
 
 /* ==== Состояния ошибок ==== */
 input.input-error {
-  border: 2px solid var(--color-txt-error) !important;
-  background: var(--color-input-error) !important;
-  animation: shake 0.4s;
+  border:2px solid var(--color-txt-error)!important;
+  background:var(--color-input-error)!important;
+  animation:shake .4s;
 }
-
 /* ==== АНИМАЦИИ ==== */
 @keyframes shake {
-  0% { transform: translateX(0px);}
-  20% { transform: translateX(-5px);}
-  40% { transform: translateX(5px);}
-  60% { transform: translateX(-4px);}
-  80% { transform: translateX(4px);}
-  100% { transform: translateX(0px);}
+  0% {transform:translateX(0px);}
+  20%{transform:translateX(-5px);}
+  40%{transform:translateX(5px);}
+  60%{transform:translateX(-4px);}
+  80%{transform:translateX(4px);}
+  100%{transform:translateX(0px);}
 }
 
-/* ==== МЕДИА ---- Мобилки, адаптив ==== */
+/* ==== Адаптив ==== */
 @media (max-width: 400px) {
-  :root {
-    --footer-height: 48px;
-  }
-  .container {
-    padding: .5em .3em;
-    margin-top: 1vh;
-  }
-  h1 {
-    font-size: 1.3rem;
-  }
-  .btn {
-    font-size: 1rem;
-    padding: .6em .2em;
-  }
-  .footer-btn span {
-    font-size: 0.70em;
-  }
-  .footer-btn {
-    font-size: 1.02em;
-  }
+  :root { --footer-height: 48px;}
+  .container { padding:.5em .3em; margin-top:1vh;}
+  h1 { font-size:1.3rem;}
+  .btn { font-size:1rem; padding:.6em .2em;}
+  .footer-btn span { font-size: 0.70em;}
+  .footer-btn { font-size: 1.02em;}
 }
-
-/* ==== ДРУГОЙ МЕДИА-КВЕРИ для современных экранов ==== */
 @media (min-width: 401px) {
-  .container {
-    margin-top: 6vh;
-  }
+  .container { margin-top:6vh;}
 }
-  </style>
+</style>
 </head>
 <body>
 <div class="container" id="app"></div>
@@ -400,6 +395,55 @@ if (!Array.isArray(tagsLib) || tagsLib.length === 0) {
   tagsLib.unshift(DEFAULT_TAG);
 }
 
+// ====== Глобальные настройки и функции тем, масштабирования, запрета копирования =====
+const SETTINGS_KEY = "myworkdays_settings";
+let appSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+
+// Значения по умолчанию
+if (typeof appSettings.copyProtect === "undefined") appSettings.copyProtect = false;
+if (typeof appSettings.noZoom === "undefined") appSettings.noZoom = false;
+if (typeof appSettings.theme === "undefined") appSettings.theme = "light";
+if (typeof appSettings.autoTheme === "undefined") appSettings.autoTheme = true;
+
+function saveSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
+}
+
+function updateCopyProtect() {
+  if (appSettings.copyProtect) {
+    document.body.addEventListener('copy', blockCopy, true);
+    document.body.style.userSelect = "none";
+  } else {
+    document.body.removeEventListener('copy', blockCopy, true);
+    document.body.style.userSelect = "";
+  }
+}
+function blockCopy(e) { e.preventDefault(); }
+
+function updateNoZoom() {
+  let viewport = document.querySelector('meta[name="viewport"]');
+  if (viewport) {
+    if (appSettings.noZoom) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    } else {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+    }
+  }
+}
+
+// --- Темная/светлая тема + автотема ---
+function updateTheme() {
+  if (appSettings.autoTheme && window.matchMedia) {
+    appSettings.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  document.body.classList.toggle("dark-theme", appSettings.theme === "dark");
+}
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=> {
+    if(appSettings.autoTheme) updateTheme();
+  });
+}
+  
 function saveAll() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(days));
   localStorage.setItem("tagsLib22", JSON.stringify(tagsLib));
@@ -444,8 +488,11 @@ function diffMinutes(tm1, tm2) {
   return (h2*60+m2)-(h1*60+m1);
 }
 
+updateCopyProtect();
+updateNoZoom();
+updateTheme();
+  
 // ===== UI render =====
-
 function renderApp() {
   let dt = todayStr();
   let day = findDay(dt);
@@ -895,6 +942,34 @@ function showSettings() {
   let html = `
     <b>Настройки</b>
     <ul class="tags-list">
+      <li>
+        <label>
+          <input type="checkbox" id="setCopyProtect" ${appSettings.copyProtect ? "checked" : ""}>
+          🛡️ Запретить копирование текста
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="checkbox" id="setNoZoom" ${appSettings.noZoom ? "checked" : ""}>
+          🔒 Запретить масштабирование страницы
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="checkbox" id="setAutoTheme" ${appSettings.autoTheme ? "checked" : ""}>
+          🌓 Подхватывать тему с устройства
+        </label>
+      </li>
+      <li>
+        <label>
+          🎨 Темная тема:
+          <select id="setTheme" ${appSettings.autoTheme ? "disabled" : ""}>
+            <option value="light" ${appSettings.theme === "light" ? "selected" : ""}>Светлая</option>
+            <option value="dark" ${appSettings.theme === "dark" ? "selected" : ""}>Темная</option>
+          </select>
+        </label>
+      </li>
+      <li><hr></li>
       <li><b>Мои теги:</b></li>
       ${tagsLib.map((t, i) => `
         <li style="margin-bottom:6px;">
@@ -916,6 +991,22 @@ function showSettings() {
     <button class="btn fullw" onclick="closeModal()">Закрыть</button>
   `;
   showModal(html);
+
+  // --- обработчики переключателей ---
+  document.getElementById('setCopyProtect').onchange = function() {
+    appSettings.copyProtect = this.checked; saveSettings(); updateCopyProtect();
+  };
+  document.getElementById('setNoZoom').onchange = function() {
+    appSettings.noZoom = this.checked; saveSettings(); updateNoZoom();
+  };
+  document.getElementById('setAutoTheme').onchange = function() {
+    appSettings.autoTheme = this.checked; saveSettings();
+    document.getElementById('setTheme').disabled = appSettings.autoTheme;
+    updateTheme();
+  };
+  document.getElementById('setTheme').onchange = function() {
+    appSettings.theme = this.value; saveSettings(); updateTheme();
+  };
 }
 
 function addTagFromSettings() {
