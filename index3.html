@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">  
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  
+  <!-- Стандартный favicon -->
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="shortcut icon" href="favicon.ico" />
+  <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="manifest" href="site.webmanifest" />
+  <!-- Для iOS/Android -->
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  
+  <title>Тайм-трекер | Мой рабочий день</title>
+  
+  <style>
+:root {
+  /* ------ Цвета (основные и вспомогательные) ------ */
+  --color-accent:           #3a7afe;
+  --color-accent-hover:     #236dfc;
+  --color-accent-light:     #b3d1fd;
+  --color-accent-xlight:    #e4eaff;
+  --color-bg:               #eef3fa;
+  --color-bg-white:         #fff;
+  --color-bg-footer:        #f5f8fe;
+  --color-bg-btn-active:    #e4eaff;
+  --color-bg-dual-btn:      #cafaff;
+  --color-bg-dual-btn-last: #e4eaff;
+  --color-bg-calendar:      #e8f1ff;
+  --color-bg-export:        #fffbe7;
+  --color-input-error:      #ffe7e7;
+  --color-weekend:          #ff6b6b;
+  --color-weekend-bg:       #fff0f0;
+  --color-close-btn:        #ff4757;
+  --color-close-btn-hover:  #ff2e43;
+
+  --color-txt:           #222;
+  --color-txt-grey:      #555;
+  --color-txt-accent:    #2995fa;
+  --color-txt-small:     #888;
+  --color-txt-export:    #993;
+  --color-txt-calendar:  #217;
+  --color-txt-badge:     #fff;
+  --color-txt-error:     #ff4343;
+
+  /* Остальное */
+  --radius-main:      18px;
+  --radius-calendar:  12px;
+  --radius-export:    14px;
+  --radius-badge:     8px;
+  --shadow:           0 3px 20px #0001;
+  --footer-height:    60px;
+
+  --container-padding-v: 1.5rem;
+  --container-padding-h: 1rem;
+  --container-padding-bottom: 80px;
+}
+
+/* ----- Тёмная тема ----- */
+body.dark-theme {
+  --color-accent:           #4f8dff;
+  --color-accent-hover:     #266ce5;
+  --color-accent-light:     #3666e680;
+  --color-accent-xlight:    #262c3f;
+  --color-bg:               #23252a;
+  --color-bg-white:         #23252a;
+  --color-bg-footer:        #242830;
+  --color-bg-btn-active:    #313641;
+  --color-bg-dual-btn:      #242830;
+  --color-bg-dual-btn-last: #323844;
+  --color-bg-calendar:      #2a2d35;
+  --color-bg-export:        #191b16;
+  --color-input-error:      #691818;
+  --color-weekend:          #ff7f7f;
+  --color-weekend-bg:       #3a2a2a;
+  --color-close-btn:        #ff6b6b;
+  --color-close-btn-hover:  #ff5252;
+  --color-txt:           #f4f6fd;
+  --color-txt-grey:      #aab2c8;
+  --color-txt-accent:    #8bb8ff;
+  --color-txt-small:     #8d99b4;
+  --color-txt-export:    #cca;
+  --color-txt-calendar:  #9ac2ff;
+  --color-txt-badge:     #fff;
+  --color-txt-error:     #ff4343;
+}
+
+/* === Базовая сетка и плавность === */
+body, .container, .footer-bar, .btn, .dual-btn, .modal-inner, .export {
+  transition: background .22s, color .22s, border-color .22s;
+}
+body {
+  background: var(--color-bg);
+  color: var(--color-txt);
+  margin: 0;
+  padding: 0;
+  font-family: system-ui,sans-serif;
+  min-height: 100vh;
+}
+
+.container {
+  padding: var(--container-padding-v) var(--container-padding-h);
+  padding-bottom: var(--container-padding-bottom);
+  max-width: 420px;
+  margin: auto;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-main);
+  margin-top: 3vh;
+  box-shadow: var(--shadow);
+}
+h1 {
+  margin: 0 0 12px;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--color-accent);
+  text-align: center;
+}
+
+/* ===== FLEX GRID/COMMON ===== */
+.row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.row-col {
+  flex-direction: column;
+  gap: 6px;
+}
+.fullw { width:100%; display:block; }
+.center { text-align:center; }
+hr { margin:16px 0; }
+
+/* ========== Кастомные элементы форм ========== */
+/* --- ЧЕКБОКСЫ --- */
+input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width:36px; height:20px; border-radius:16px;
+  background: var(--color-bg-dual-btn);
+  border:2px solid var(--color-accent-light);
+  position: relative;
+  outline: none; cursor: pointer;
+  vertical-align: middle;
+  transition: background .18s, border-color .22s;
+  margin-right:10px; box-shadow:none;
+}
+input[type="checkbox"]:checked {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+input[type="checkbox"]::before {
+  content:''; position:absolute; left:3px; top:3px;
+  width:14px; height:14px; border-radius:50%;
+  background: var(--color-bg-white);
+  transition: transform .18s, background .22s;
+  box-shadow: 0 2px 7px #0001;
+}
+input[type="checkbox"]:checked::before {
+  transform: translateX(16px);
+  background: var(--color-bg-white);
+}
+input[type="checkbox"]:focus-visible {
+  outline:2px solid var(--color-accent); outline-offset:2px;
+}
+
+/* --- SELECT --- */
+select {
+  appearance: none; -webkit-appearance: none;
+  background: var(--color-bg-dual-btn);
+  color: var(--color-txt);
+  border:2px solid var(--color-accent-light);
+  border-radius:12px;
+  font-size:1em;
+  padding: 0.34em 2.2em 0.34em 0.7em;
+  outline: none;
+  margin-right:7px; min-width:70px;
+  transition: background .22s, color .22s, border-color .22s;
+  box-shadow: none; cursor:pointer; position:relative;
+}
+select:focus-visible, select:focus { border-color:var(--color-accent); }
+select[multiple] { min-height:2.4em; }
+select:not([multiple]) {
+  background-image: url('data:image/svg+xml;utf8,<svg height="18" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M4 7l5 5 5-5" stroke="%23666" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+  background-repeat:no-repeat;
+  background-position:right 0.7em center;
+  background-size: 1.2em 1.2em;
+}
+body.dark-theme select:not([multiple]) {
+  background-image: url('data:image/svg+xml;utf8,<svg height="18" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M4 7l5 5 5-5" stroke="%23aabafc" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+}
+
+/* --- NUMBER INPUT --- */
+input[type="number"] {
+  background: var(--color-bg-dual-btn);
+  color: var(--color-txt);
+  border:2px solid var(--color-accent-light);
+  border-radius:10px; font-size:1em;
+  padding:0.28em 0.7em; outline:none;
+  margin-right:5px; box-shadow:none;
+  transition: background .22s, color .22s, border-color .22s;
+}
+input[type="number"]:focus { border-color: var(--color-accent); }
+
+/* --- Generic text input? (ненавязчиво) --- */
+input[type="text"], input[type="time"] {
+  background: var(--color-bg-dual-btn);
+  color: var(--color-txt);
+  border: 2px solid var(--color-accent-light);
+  border-radius: 10px;
+  font-size: 1em;
+  padding: .28em .7em;
+  outline: none;
+  transition: background .22s, color .22s, border-color .22s;
+  box-shadow: none;
+}
+input[type="text"]:focus, input[type="time"]:focus {
+  border-color: var(--color-accent);
+}
+
+/* --- Input Error --- */
+input.input-error {
+  border: 2px solid var(--color-txt-error) !important;
+  background: var(--color-input-error) !important;
+  animation: shake .4s;
+}
+
+/* ==== Dual-кнопки & Основные кнопки ==== */
+.dual-btn {
+  display:flex; flex-direction:row; flex:1 1 0;
+  border-radius:var(--radius-main); overflow:hidden;
+  border:2px solid var(--color-accent);
+}
+.dual-btn .btn {
+  border:none; border-radius:0; font-size:1.2rem;
+  background:var(--color-bg-white);
+  color:var(--color-accent);
+  box-shadow:none; flex:1 1 0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  min-width:0; padding:0.85em 0.5em;
+}
+.dual-btn .btn:first-child { border-right:1px solid var(--color-accent-light); background:var(--color-bg-dual-btn);}
+.dual-btn .btn:last-child  { background:var(--color-bg-dual-btn-last);}
+.btn {
+  background:var(--color-bg-white);
+  border:2px solid var(--color-accent);
+  color:var(--color-accent);
+  border-radius:var(--radius-main);
+  font-size:1.3rem; padding:1em 1em;
+  flex: 1 1 auto; font-weight:500;
+  cursor:pointer; transition:.1s;
+  box-shadow:var(--shadow);
+}
+.btn.active, .btn:active {
+  background:var(--color-bg-btn-active);
+  color:var(--color-bg-white);
+  border-color:var(--color-accent);
+}
+.btn-sub {
+  font-size:.76em; color:var(--color-txt-accent);
+  margin-top:2px; font-weight:400;
+  letter-spacing:.02em; line-height:1;
+}
+/* Кнопка-редактирование */
+.edit {
+  background:none; border:none;
+  color:var(--color-accent);
+  font-size:1.2em; cursor:pointer; margin-left:6px;
+}
+
+/* Кнопка закрытия/отмены */
+.btn-close {
+  background: var(--color-close-btn);
+  color: white;
+  border: 2px solid var(--color-close-btn);
+}
+.btn-close:hover, .btn-close:active {
+  background: var(--color-close-btn-hover);
+  border-color: var(--color-close-btn-hover);
+}
+
+/* ===== Теги и списки ===== */
+.tags-list { margin:.4em 0 0; padding:0; list-style:none;}
+.tags-list li { padding:.2em 0; }
+.badge {
+  background:var(--color-accent);
+  color:var(--color-txt-badge);
+  border-radius:var(--radius-badge);
+  padding:.1em .7em; font-size:1em;
+}
+.small { font-size:.92em; color:var(--color-txt-small); }
+
+/* ==== Календарные кнопки ==== */
+.cal-btn {
+  font-size:1rem; padding:.2em 1em;
+  margin:.2em; border-radius:var(--radius-calendar);
+  background:var(--color-bg-calendar);
+  border: none; color: var(--color-txt-calendar); cursor:pointer;
+}
+.cal-btn.selected { background:var(--color-accent); color:var(--color-bg-white);}
+.cal-btn.weekend { 
+  background: var(--color-weekend-bg); 
+  color: var(--color-weekend);
+}
+.cal-btn.weekend.selected { 
+  background: var(--color-weekend); 
+  color: white;
+}
+.sw-btn { margin:.1em .2em; }
+
+/* Дни недели в календаре */
+.week-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+.week-day {
+  padding: 5px;
+  font-size: 0.9em;
+}
+.week-day.weekend {
+  color: var(--color-weekend);
+}
+
+/* ==== КНОПКИ В ПОДВАЛЕ ==== */
+.footer-bar {
+  position: fixed; left:0; right:0; bottom:0;
+  background: var(--color-bg-footer);
+  border-top: 1px solid var(--color-accent-light);
+  display: flex; justify-content: space-around; align-items: stretch;
+  z-index: 10; height: var(--footer-height);
+}
+.footer-btn {
+  flex:1 1 0; background:var(--color-bg-white);
+  border:1px solid var(--color-accent-light);
+  font-size:1.20em;
+  color:var(--color-accent);
+  padding:7px 0 3px 0;
+  cursor:pointer; outline:none;
+  display:flex; flex-direction:column; align-items:center; gap:0;
+  transition:background .15s;
+  border-radius:8px; line-height:1.0; min-width:0;
+  user-select:none; margin: 5px 3px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.footer-btn:active, .footer-btn:focus { background:var(--color-bg-btn-active);}
+.footer-btn span {
+  font-size:.74em; color:var(--color-txt-grey);
+  margin-top:2px; font-weight:400;
+}
+
+/* ==== МОДАЛЬНОЕ ОКНО ==== */
+.modal {
+  position: fixed; top:0; left:0; right:0; bottom:0;
+  background: #0002; z-index:22;
+  display:flex; align-items:center; justify-content:center;
+}
+.modal-inner {
+  scroll-behavior: smooth; background:var(--color-bg-white);
+  padding:1.2em; border-radius:20px;
+  max-width:350px; width:95%;
+  box-shadow:var(--shadow);
+  max-height:90vh; overflow-y:auto;
+}
+.close-btn {
+  float:right; background:none;
+  border:none; color:#a44; font-size:1.4em; cursor:pointer;
+}
+
+/* ==== Экспорт, настройки ==== */
+.export {
+  background:var(--color-bg-export);
+  padding:.7em .8em; border-radius:var(--radius-export);
+  margin-top:.6em; color:var(--color-txt-export);
+  box-shadow: 0 2px 12px #d7dcaf29;
+}
+/* Добавим стиль для textarea внутри экспорта */
+.export textarea {
+  border-radius:9px;
+  outline:none;
+  border:1.2px solid var(--color-accent-xlight);
+  background: #fffdec;
+  padding:.7em .9em;
+  font-size:1em;
+  width:98%;
+  min-height:110px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 6px #b7b07130;
+  color:#625440;
+  resize:vertical;
+}
+body.dark-theme .export textarea {
+  background: #24241e;
+  color: #dcc;
+}
+
+/* Кнопочки в разделе экспорта - делаем компактнее, но читаемыми */
+.export .btn {
+  margin-top:7px;
+  font-size:1em;
+  padding:.5em 1em;
+  border-radius:10px;
+}
+.export .btn:first-of-type { margin-top:12px; }
+
+/* ==== Ряд с фильтрами в экспорте ==== */
+.setting-row {
+  display:flex; align-items:center; gap:7px; margin:.5em 0;
+}
+
+/* ==== Состояния ошибок ==== */
+input.input-error {
+  border:2px solid var(--color-txt-error)!important;
+  background:var(--color-input-error)!important;
+  animation:shake .4s;
+}
+/* ==== АНИМАЦИИ ==== */
+@keyframes shake {
+  0% {transform:translateX(0px);}
+  20%{transform:translateX(-5px);}
+  40%{transform:translateX(5px);}
+  60%{transform:translateX(-4px);}
+  80%{transform:translateX(4px);}
+  100%{transform:translateX(0px);}
+}
+
+/* ==== Адаптив ==== */
+@media (max-width: 400px) {
+  :root { --footer-height: 48px;}
+  .container { padding:.5em .3em; margin-top:1vh;}
+  h1 { font-size:1.3rem;}
+  .btn { font-size:1rem; padding:.6em .2em;}
+  .footer-btn span { font-size: 0.70em;}
+  .footer-btn { font-size: 1.02em;}
+  .export textarea { font-size:.95em; }
+  .footer-btn {
+    padding: 5px 0 2px 0;
+    margin: 3px 2px;
+  }
+}
+@media (min-width: 401px) {
+  .container { margin-top:6vh;}
+}
+</style>
+
+  
+</head>
+<body>
+<div class="container" id="app"></div>
+
+
+<div class="footer-bar">
+  <button class="footer-btn" onclick="showCalendar()">📅<br><span>Календарь</span></button>
+  <button class="footer-btn" onclick="showExport()">📤<br><span>Экспорт</span></button>
+  <button class="footer-btn" onclick="showSettings()">⚙️<br><span>Настройки</span></button>
+  <button class="footer-btn" onclick="showAbout()">ℹ️<br><span>О приложении</span></button>
+</div>
+
+  
+<!-- Модальное окно (редактор тегов/времени/экспорт/отчет) -->
+<div id="modal" style="display:none;"></div>
+
+
+
+  
+<script>
+/** ================================================================
+ *    TIME TRACKER — основной js-файл приложения
+ *    Все функции, UI и логика
+ * ================================================================ */
+
+/** === CONSTANTS =============== */
+const STORAGE_KEY  = "myworkdays22";
+const SETTINGS_KEY = "myworkdays_settings";
+const DEFAULT_TAG  = "НАСТРОЙКА ОБОРУДОВАНИЯ";
+const APP_VERSION  = "1.0.0 (2024-06-05)"; // для About
+
+/** === LOCALSTORAGE — INIT =============== */
+
+// Основной массив дней с тэгами  
+let days = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+// Список тэгов  
+let tagsLib = JSON.parse(localStorage.getItem("tagsLib22") || "[]");
+if (!Array.isArray(tagsLib) || tagsLib.length === 0) {
+  tagsLib = [DEFAULT_TAG];
+} else if (!tagsLib.includes(DEFAULT_TAG)) {
+  tagsLib.unshift(DEFAULT_TAG);
+}
+// Глобальные настройки UI/защиты  
+let appSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+if (typeof appSettings.copyProtect === "undefined") appSettings.copyProtect = false;
+if (typeof appSettings.noZoom === "undefined") appSettings.noZoom = false;
+if (typeof appSettings.theme === "undefined") appSettings.theme = "light";
+if (typeof appSettings.autoTheme === "undefined") appSettings.autoTheme = true;
+
+// =========== SETTINGS HELPERS ==================
+function saveSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
+}
+function saveAll() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(days));
+  localStorage.setItem("tagsLib22", JSON.stringify(tagsLib));
+}
+
+/** === UI-BEHAVIOR INIT ============ */
+function updateCopyProtect() {
+  if (appSettings.copyProtect) {
+    document.body.addEventListener('copy', blockCopy, true);
+    document.body.style.userSelect = "none";
+  } else {
+    document.body.removeEventListener('copy', blockCopy, true);
+    document.body.style.userSelect = "";
+  }
+}
+function blockCopy(e) { e.preventDefault(); }
+
+function updateNoZoom() {
+  let viewport = document.querySelector('meta[name="viewport"]');
+  if (viewport) {
+    if (appSettings.noZoom) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    } else {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+    }
+  }
+}
+function updateTheme() {
+  if (appSettings.autoTheme && window.matchMedia) {
+    appSettings.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  document.body.classList.toggle("dark-theme", appSettings.theme === "dark");
+}
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=> {
+    if(appSettings.autoTheme) updateTheme();
+  });
+}
+
+/** === BASIC HELPERS ======================= */
+function findDay(date)      { return days.find(d => d.date === date); }
+function todayStr()         { return (new Date()).toISOString().slice(0,10); }
+function toHM(dt)           { let [h,m]=dt.split(":").map(Number); return [h||0,m||0]; }
+function fromHM(h, m)       { return (h<10?'0':'')+h+":"+(m<10?'0':'')+m; }
+function roundTime(timeStr, roundMin=10, direction='round') {
+  let [h, m] = toHM(timeStr);
+  let total = h*60+m, q = total / roundMin, res;
+  if(direction==='down') res = Math.floor(q);
+  else if(direction==='up') res = Math.ceil(q);
+  else res = Math.round(q);
+  total = res*roundMin; h = Math.floor(total/60); m = total%60;
+  return fromHM(h, m);
+}
+function diffMinutes(tm1, tm2) {
+  let [h1,m1]=toHM(tm1), [h2,m2]=toHM(tm2);
+  return (h2*60+m2)-(h1*60+m1);
+}
+
+// == INIT UI SETTINGS ==
+updateCopyProtect();
+updateNoZoom();
+updateTheme();
+
+
+
+function roundMinutes(totalMin, step=10, direction='round') {
+  let q = totalMin / step, res;
+  if(direction==='down') res = Math.floor(q);
+  else if(direction==='up') res = Math.ceil(q);
+  else res = Math.round(q);
+  return res * step;
+}
+
+/* === ЭКСПОРТ ОТЧЁТА === */
+function showExport() {
+  let minDate = days.length ? days[0].date : todayStr();
+  let maxDate = days.length ? days[days.length-1].date : todayStr();
+  let html = `
+    <div><b>Экспортировать отчёт</b></div>
+    <form id="reportForm">
+      <div class="setting-row">Период: 
+        <select id="per">
+          <option value="1-15">1–15</option>
+          <option value="16-31">16–31</option>
+          <option value="full">Весь месяц</option>
+          <option value="range">Период</option>
+        </select>
+        <input type="date" id="dfrom" style="display:none" value="${minDate}"> -
+        <input type="date" id="dto" style="display:none" value="${maxDate}">
+      </div>
+      <div class="setting-row">Экспорт:
+        <select id="expType">
+          <option value="all">Всё</option>
+          <option value="tags">Только теги</option>
+          <option value="work">Только рабочие часы (приход/уход)</option>
+        </select>
+      </div>
+      <div class="setting-row">Округление:
+        <select id="roundM">
+          <option value="60">До 1 часа</option>
+          <option value="30">До 30 мин</option>
+          <option value="10" selected>До 10 мин</option>
+        </select>
+        <select id="roundDir">
+          <option value="round">Обычно</option>
+          <option value="up">Вверх</option>
+          <option value="down">Вниз</option>
+        </select>
+      </div>
+      <div class="setting-row">Теги: <select multiple id="tagsFlt" style="min-width:70px;min-height:2em;">
+        ${tagsLib.map(t=>`<option value="${t}" selected>${t}</option>`).join("")}
+      </select> <span class="small">(для режима "теги")</span></div>
+      <button class="btn fullw" type="submit">Экспортировать</button>
+      <button class="btn btn-close fullw" type="button" onclick="closeModal()">Отмена</button>
+    </form>
+    <div id="exportResult"></div>
+  `;
+  showModal(html);
+
+  let perSel = document.getElementById("per");
+  let fromD = document.getElementById("dfrom");
+  let toD = document.getElementById("dto");
+  perSel.onchange = function() {
+    if(perSel.value==='range'){
+      fromD.style.display='inline';
+      toD.style.display='inline';
+    } else {
+      fromD.style.display='none';
+      toD.style.display='none';
+    }
+  };
+
+  document.getElementById("reportForm").onsubmit = function(e) {
+    e.preventDefault();
+    let period = perSel.value;
+    let from = fromD.value || minDate;
+    let to = toD.value || maxDate;
+    let exp = document.getElementById("expType").value;
+    let roundM = +document.getElementById("roundM").value;
+    let roundDir = document.getElementById("roundDir").value;
+    let tagsFlt = Array.from(document.getElementById("tagsFlt").selectedOptions).map(op=>op.value);
+
+    let list;
+    if (period === "1-15") {
+      list = days.filter(d=>+d.date.slice(8,10)<=15 && inThisMonth(d.date));
+    } else if(period === "16-31") {
+      list = days.filter(d=>+d.date.slice(8,10)>=16 && inThisMonth(d.date));
+    } else if(period === "range") {
+      list = days.filter(d=>d.date >= from && d.date <= to);
+    } else { // full
+      list = days.filter(d=>inThisMonth(d.date));
+    }
+    function inThisMonth(dt) {
+      let selm = days.length ? days[days.length-1].date.slice(5,7) : todayStr().slice(5,7);
+      return dt.slice(5,7) === selm;
+    }
+
+    let rows = [];
+    let tagTotals = {};
+
+    // ===== ОТЧЁТ ПО РАБОЧЕМУ ВРЕМЕНИ =====
+    if (exp === 'work' || exp === 'all') {
+      for (const d of list) {
+        if (!d.start || !d.end) continue;
+        let mins = diffMinutes(d.start, d.end);
+        let rounded = roundMinutes(mins, roundM, roundDir);
+        let hr = Math.floor(rounded / 60), mn = rounded % 60;
+        rows.push(`${d.date}: ${d.start} – ${d.end} (${hr}ч ${mn}м)`);
+      }
+    }
+
+    // ===== ОТЧЁТ ПО ТЕГАМ =====
+    if (exp === 'tags' || exp === 'all') {
+      for (const d of list) {
+        if (!d.tags?.length) continue;
+        for (const tag of d.tags) {
+          if (tagsFlt.includes(tag.tag)) {
+            let mins = diffMinutes(tag.start, tag.end);
+            if (!tagTotals[tag.tag]) tagTotals[tag.tag] = 0;
+            tagTotals[tag.tag] += mins > 0 ? mins : 0;
+            let rounded = roundMinutes(mins, roundM, roundDir);
+            let hr = Math.floor(rounded / 60), mn = rounded % 60;
+            rows.push(`${d.date}: ${tag.tag} — ${tag.start}-${tag.end} (${hr}ч ${mn}м)`);
+          }
+        }
+      }
+      if (Object.keys(tagTotals).length) {
+        rows.push('\nСуммарно по тегам:');
+        for (const tag of Object.keys(tagTotals)) {
+          let tot = tagTotals[tag];
+          let rounded = roundMinutes(tot, roundM, roundDir);
+          let hr = Math.floor(rounded / 60), mn = rounded % 60;
+          rows.push(`${tag}: ${hr}ч ${mn}м`);
+        }
+      }
+    }
+
+    let resTxt = rows.join('\n');
+    document.getElementById("exportResult").innerHTML =
+      `<div class="export"><b>Готовый текст:</b><br>
+      <textarea style="width:98%;min-height:120px">${resTxt}</textarea>
+      <br>
+      <button class="btn" type="button" onclick="downloadText()">Скачать .txt</button>
+      <button class="btn" type="button" onclick="copyExportText()">Скопировать</button>
+      <button class="btn" type="button" onclick="shareToTelegram()">Отправить в Telegram</button>
+      </div>`;
+    window.export__text = resTxt;
+    return false;
+  };
+}
+
+// --- ОТПРАВИТЬ В TELEGRAM ---
+function shareToTelegram() {
+  if (!window.export__text) return;
+  let text = window.export__text;
+  if (text.length > 4000) text = text.slice(0, 4000) + '...';
+  let url = "https://t.me/share/url?url=&text=" + encodeURIComponent(text);
+  window.open(url, "_blank");
+}
+
+// --- СКОПИРОВАТЬ В БУФЕР ---
+function copyExportText() {
+  if (!window.export__text) return;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(window.export__text)
+      .then(() => { alert("Текст скопирован!"); })
+      .catch(() => { fallbackCopy(); });
+  } else {
+    fallbackCopy();
+  }
+  function fallbackCopy() {
+    try {
+      let ta = document.createElement("textarea");
+      ta.value = window.export__text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      alert("Текст скопирован!");
+    } catch {
+      alert("Не удалось скопировать.");
+    }
+  }
+}
+
+// --- СКАЧАТЬ TXT ---
+function downloadText() {
+  let b = new Blob([window.export__text || ""], { type:"text/plain" });
+  let link = document.createElement("a");
+  link.href = URL.createObjectURL(b);
+  link.download = "work_report.txt";
+  link.click();
+}
+  
+
+  
+
+/** =========================================================  
+ *               MAIN RENDER FUNCTION (главная страница)  
+ * ========================================================= */  
+function renderApp() {  
+  let dt = todayStr();  
+  let day = findDay(dt);  
+  let rows = [];  
+  rows.push(`<h1>Мой рабочий день</h1>`);  
+  rows.push(`  
+    <div class="row">  
+      <div class="dual-btn">  
+        <button class="btn" onclick="markNow('start')">➔ ${day?.start || '--:--'}<div class="btn-sub">ТЕКУЩЕЕ ВРЕМЯ</div></button>  
+        <button class="btn" onclick="openManualTime('start')">🕒<div class="btn-sub">ВЫБРАТЬ ВРЕМЯ</div></button>  
+      </div>  
+      <div class="dual-btn">  
+        <button class="btn" onclick="markNow('end')">⏱ ${day?.end || '--:--'}<div class="btn-sub">ТЕКУЩЕЕ ВРЕМЯ</div></button>  
+        <button class="btn" onclick="openManualTime('end')">🕒<div class="btn-sub">ВЫБРАТЬ ВРЕМЯ</div></button>  
+      </div>  
+    </div>  
+  `);  
+  // Итог рабочего дня  
+  if(day?.start && day?.end) {  
+    let time = diffMinutes(day.start, day.end);  
+    rows.push(`<div class="center"><span class="badge">${Math.floor(time/60)}ч ${(time%60).toString().padStart(2,"0")}м</span> общий рабочий день</div>`);  
+  }  
+
+  // ======= Список тэгов и итоги по тегам ========  
+  rows.push(`<hr><div><b>Деятельность:</b></div>`);  
+  let tagSums = {};  
+  if (day?.tags?.length) {  
+    rows.push('<ul class="tags-list">');  
+    day.tags.forEach((t, i) => {  
+      let st = t.start, en = t.end;  
+      let mins = (st && en) ? diffMinutes(st, en) : 0;  
+      if (!tagSums[t.tag]) tagSums[t.tag] = 0;  
+      tagSums[t.tag] += mins > 0 ? mins : 0;  
+      let hr = Math.floor(mins/60), mn = mins%60;  
+      rows.push(  
+      `<li>  
+        <b>${t.tag}</b> ${st || '--:--'}…${en || '--:--'}${mins>0 ? ` <span class="small">(${hr}ч ${mn}м)</span>` : ''}  
+        <div class="row" style="margin:.3em 0;flex-wrap:wrap;">  
+          <div class="dual-btn">  
+            <button class="btn" onclick="markTagNow(${i}, 'start')">➔ ${t.start || '--:--'}<div class="btn-sub">ТЕКУЩЕЕ</div></button>  
+            <button class="btn" onclick="manualTagTime(${i}, 'start')">🕒<div class="btn-sub">ВЫБРАТЬ</div></button>  
+          </div>  
+          <div class="dual-btn">  
+            <button class="btn" onclick="markTagNow(${i}, 'end')">⏱ ${t.end || '--:--'}<div class="btn-sub">ТЕКУЩЕЕ</div></button>  
+            <button class="btn" onclick="manualTagTime(${i}, 'end')">🕒<div class="btn-sub">ВЫБРАТЬ</div></button>  
+          </div>  
+          <button class="edit" onclick="editTag(${i})" title="Редактировать тег">✎</button>  
+          <button class="edit" onclick="delTag(${i})" title="Удалить тег">✕</button>  
+        </div>  
+      </li>`);  
+    });  
+    // + добавить новый тег  
+    rows.push(`  
+      <li>  
+        <button class="btn fullw" onclick="addTagPlus()" style="display:flex;align-items:center;gap:7px;justify-content:center;margin-top:4px;">  
+          ➕<span style="color:#888;font-size:.96em;">Добавить тег</span>  
+        </button>  
+      </li>  
+    `);  
+    rows.push('</ul>');  
+    // Итоги по тегам за сегодня  
+    if (Object.keys(tagSums).length > 0) {  
+      rows.push(`<div class="small" style="margin:7px 0 0 2px;"><b>Итого по тегам за сегодня:</b><br>`);  
+      for (const tag in tagSums) {  
+        let tot = tagSums[tag], hr = Math.floor(tot/60), mn = tot%60;  
+        rows.push(`${tag}: ${hr}ч ${mn}м<br>`);  
+      }  
+      rows.push(`</div>`);  
+    }  
+  } else {  
+    rows.push(`<div class="small">Пока не добавлено</div>  
+      <button class="btn fullw" onclick="addTagPlus()">➕ Добавить тег</button>`);  
+  }  
+  rows.push(`<hr>`);  
+  // Завершаем рендер  
+  document.getElementById('app').innerHTML = rows.join('\n');  
+  closeModal();  
+}  
+window.renderApp = renderApp;  
+
+/** === MARK HANDLERS ==== */  
+function markNow(type) {  
+  let dt = todayStr(), now = new Date(), h = now.getHours(), m = now.getMinutes();  
+  let tstr = fromHM(h, m); let day = findDay(dt);  
+  if(!day) { day = {date: dt, start: '', end: '', tags:[]}; days.push(day);}  
+  day[type] = tstr; saveAll(); renderApp();  
+}  
+function openManualTime(type) {  
+  let dt = todayStr(), day = findDay(dt) || { date: dt, start: '', end: '', tags: [] };  
+  let val = (day[type] && /^\d\d:\d\d$/.test(day[type]))  
+    ? day[type]  
+    : (() => {let d = new Date(), h = d.getHours(), m = d.getMinutes(); return (h<10?'0':'')+h+":"+(m<10?'0':'')+m;})();  
+  let label = type === "start" ? "Время прихода" : "Время ухода";  
+  let html = `  
+    <form id="manualTimeForm">  
+      <label>${label}:<br>  
+        <input type="time" id="manualTimeInput" value="${val}" required>  
+      </label>  
+      <div class="row" style="margin-top:16px;">  
+        <button class="btn fullw" type="submit">Сохранить</button>  
+        <button type="button" class="btn btn-close fullw" onclick="closeModal()">Отмена</button>  
+      </div>  
+    </form>  
+  `;  
+  showModal(html);  
+  document.getElementById('manualTimeForm').onsubmit = function(e) {  
+    e.preventDefault();  
+    const input = document.getElementById('manualTimeInput');  
+    const t = input.value.trim();  
+    if (!t) {  
+      input.classList.add('input-error');  
+      input.focus();  
+      setTimeout(() => input.classList.remove('input-error'), 1000);  
+      alert('Пожалуйста, выберите время!');  
+      return;  
+    }  
+    let curday = findDay(dt);  
+    if(!curday) { curday = { date: dt, start: '', end: '', tags: [] }; days.push(curday); }  
+    curday[type] = t;  
+    saveAll();  
+    renderApp();  
+  };  
+}   
+
+function markTagNow(idx, type) {  
+  let dt = todayStr();  
+  let day = findDay(dt);  
+  if (!day || !day.tags[idx]) return;  
+  let now = new Date();  
+  let h = now.getHours(), m = now.getMinutes();  
+  let tstr = fromHM(h, m);  
+  day.tags[idx][type] = tstr;  
+  saveAll();  
+  renderApp();  
+}  
+function manualTagTime(idx, type) {  
+  let dt = todayStr();  
+  let day = findDay(dt);  
+  let t = (day && day.tags[idx] && day.tags[idx][type]) || "";  
+  let label = (type === "start" ? "Начало тега" : "Конец тега");  
+  let html = `  
+    <form id="manualTagTimeForm">  
+      <label>${label}:<br>  
+        <input type="time" id="manualTagTimeInput" value="${t}" required>  
+      </label>  
+      <div class="row" style="margin-top:16px;">  
+        <button class="btn fullw" type="submit">Сохранить</button>  
+        <button type="button" class="btn btn-close fullw" onclick="closeModal()">Отмена</button>  
+      </div>  
+    </form>  
+  `;  
+  showModal(html);  
+  document.getElementById('manualTagTimeForm').onsubmit = function(e) {  
+    e.preventDefault();  
+    const input = document.getElementById('manualTagTimeInput');  
+    const val = input.value.trim();  
+    if (!val) {  
+      input.classList.add('input-error');  
+      input.focus();  
+      setTimeout(() => input.classList.remove('input-error'), 1000);  
+      alert('Пожалуйста, выберите время!');  
+      return;  
+    }  
+    day.tags[idx][type] = val;  
+    saveAll();  
+    renderApp();  
+  };  
+}  
+// === Быстрое добавление нового тега ===  
+function addTagPlus() {  
+  let dt = todayStr();  
+  let day = findDay(dt);  
+  if (!day) return;  
+  let now = new Date();  
+  let tstr = fromHM(now.getHours(), now.getMinutes());  
+  day.tags.push({ tag: DEFAULT_TAG, start: "", end: "" });  
+  saveAll();  
+  renderApp();  
+}  
+function editTags() {  
+  let dt = todayStr(); let day = findDay(dt);  
+  if(!day) {alert("Сначала отметьте время прихода (и желательно ухода)!");return;}  
+  showTagModal(null, dt);  
+}  
+function editTag(idx) {  
+  let dt = todayStr(); let day = findDay(dt);  
+  showTagModal(idx, dt);  
+}  
+function delTag(idx) {  
+  let dt = todayStr(); let day = findDay(dt);  
+  if(day && day.tags && day.tags[idx] !== undefined) {  
+    if(confirm("Удалить тег "+day.tags[idx].tag+"?")) {  
+      day.tags.splice(idx,1);  
+      saveAll();  
+      renderApp();  
+    }  
+  }  
+}  
+
+// === Tag Modal (edit/new) ===  
+function showTagModal(tagIdx, forDate) {  
+  let day = findDay(forDate);   
+  if (!day) return;  
+  let tagObj;  
+  if (tagIdx !== null && day.tags[tagIdx]) {  
+    tagObj = { ...day.tags[tagIdx] };  
+  } else {  
+    tagObj = { tag: DEFAULT_TAG, start: day.start || "09:00", end: day.end || "18:00" };  
+  }  
+  let tagOptions = [DEFAULT_TAG, ...tagsLib.filter(t => t !== DEFAULT_TAG)]  
+    .map(t => `<option value="${t}"></option>`).join("");  
+  let html = `  
+    <form id="tagForm">  
+      <label>Тег:<br>  
+        <input type="text" list="tagsSug" value="${tagObj.tag || ''}" id="tg" required autocomplete="off">  
+        <datalist id="tagsSug">${tagOptions}</datalist>  
+      </label><br>  
+      <label>Начало:<br>  
+        <input type="time" id="st" value="${tagObj.start}" required>  
+      </label><br>  
+      <label>Конец:<br>  
+        <input type="time" id="en" value="${tagObj.end}" required>  
+      </label><br>  
+      <div class="row">  
+        <button class="btn fullw" type="submit">Сохранить</button>  
+        <button type="button" class="btn btn-close fullw" onclick="closeModal()">Закрыть</button>  
+      </div>  
+    </form>  
+  `;  
+  showModal(html);  
+  document.getElementById('tagForm').onsubmit = function(e) {  
+    e.preventDefault();  
+    let tg = document.getElementById('tg').value.trim();  
+    let st = document.getElementById('st').value, en = document.getElementById('en').value;  
+    if (!tg) return alert("Введите тег");  
+    if (!tagsLib.includes(tg)) tagsLib.push(tg);  
+    if (tagIdx !== null) day.tags[tagIdx] = { tag: tg, start: st, end: en };  
+    else day.tags.push({ tag: tg, start: st, end: en });  
+    saveAll(); renderApp();  
+  };  
+}  
+
+/** === CALENDAR UI === */  
+function showCalendar(mon=null, yr=null) {  
+  let now = new Date();  
+  let year = yr || now.getFullYear();  
+  let month = mon!==null ? mon : now.getMonth(); // 0-based  
+  let first = new Date(year,month,1);  
+  let last = new Date(year,month+1,0);  
+  let daysNum = last.getDate();  
+  
+  // Определяем день недели для первого дня месяца (0 - воскресенье, 1 - понедельник и т.д.)
+  let firstDayOfWeek = first.getDay();
+  // Преобразуем воскресенье (0) в 7 для удобства расчетов
+  if (firstDayOfWeek === 0) firstDayOfWeek = 7;
+  
+  let content = `
+    <div style='text-align:center; margin-bottom: 15px;'>
+      <b>${["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"][month]} ${year}</b>
+    </div>
+    
+    <div class="week-days">
+      <div class="week-day">Пн</div>
+      <div class="week-day">Вт</div>
+      <div class="week-day">Ср</div>
+      <div class="week-day">Чт</div>
+      <div class="week-day">Пт</div>
+      <div class="week-day weekend">Сб</div>
+      <div class="week-day weekend">Вс</div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;">
+  `;
+  
+  // Добавляем пустые ячейки для дней до начала месяца
+  for (let i = 1; i < firstDayOfWeek; i++) {
+    content += `<div style="height: 35px;"></div>`;
+  }
+  
+  for(let i=1; i<=daysNum; i++) {
+    let ds = `${year}-${(month+1).toString().padStart(2,"0")}-${i.toString().padStart(2,"0")}`;
+    let hasData = days.some(d=>d.date===ds);
+    
+    // Определяем день недели (0 - воскресенье, 6 - суббота)
+    let dayOfWeek = new Date(year, month, i).getDay();
+    let isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    
+    content += `
+      <button class="cal-btn${hasData?' selected':''}${isWeekend?' weekend':''}" 
+              onclick="showDay('${ds}')" 
+              style="width: 100%; height: 35px; padding: 5px;">
+        ${i}
+      </button>
+    `;
+  }
+  
+  content += `</div>
+    <div class='center' style="margin-top: 15px;">
+      <button class="sw-btn" onclick="showCalendar(${month-1<0?11:month-1},${month-1<0?year-1:year})">←</button>
+      <button class="sw-btn" onclick="showCalendar(${month+1>11?0:month+1},${month+1>11?year+1:year})">→</button>
+    </div>
+    <div class='center' style="margin-top: 15px;">
+      <button class="btn btn-close" onclick="closeModal()">Закрыть</button>
+    </div>`;
+    
+  showModal(content);
+}
+
+function showDay(ds) {
+  let day = findDay(ds) || { date: ds, start: '', end: '', tags: [] };
+  let html = `
+    <b>${formatDate(ds)}</b><br>
+    <div style="margin: 10px 0;">
+      <label>Время прихода:
+        <input type="time" id="editStart" value="${day.start || ''}" style="margin-left: 5px;">
+      </label><br>
+      <label>Время ухода:
+        <input type="time" id="editEnd" value="${day.end || ''}" style="margin-left: 5px;">
+      </label>
+    </div>`;
+
+  if (day.tags?.length) {
+    html += `<div><b>Теги:</b></div><ul class="tags-list">`;
+    let tagSums = {};
+    day.tags.forEach((t, index) => {
+      let st = t.start, en = t.end;
+      let mins = (st && en) ? diffMinutes(st, en) : 0;
+      if (!tagSums[t.tag]) tagSums[t.tag] = 0;
+      tagSums[t.tag] += mins > 0 ? mins : 0;
+      let hr = Math.floor(mins/60), mn = mins%60;
+      
+      html += `
+        <li>
+          <b>${t.tag}</b> 
+          <input type="time" value="${st || ''}" id="tagStart${index}" style="width: 80px; margin: 0 5px;">
+          -
+          <input type="time" value="${en || ''}" id="tagEnd${index}" style="width: 80px; margin: 0 5px;">
+          ${(mins > 0 ? `(${hr}ч ${mn}м)` : '')}
+          <button class="edit" onclick="removeTagFromDay('${ds}', ${index})" title="Удалить тег">✕</button>
+        </li>`;
+    });
+    html += `</ul>`;
+    
+    // Суммарно по тегам за день
+    if(Object.keys(tagSums).length){
+      html += `<div class="small" style="margin-top:8px;"><b>Итого по тегам за день:</b><br>`;
+      for(const tag in tagSums){
+        let tot = tagSums[tag], hr=Math.floor(tot/60), mn=tot%60;
+        html += `${tag}: ${hr}ч ${mn}м<br>`;
+      }
+      html += `</div>`;
+    }
+  } else {
+    html += `<div class="small">Нет тегов</div>`;
+  }
+  
+  html += `
+    <div style="margin: 15px 0;">
+      <button class="btn" onclick="addNewTagToDay('${ds}')">➕ Добавить тег</button>
+    </div>
+    
+    <div class='row'>
+      <button class="btn fullw" onclick="saveDayChanges('${ds}')">Сохранить изменения</button>
+      <button class="btn btn-close fullw" onclick="closeModal()">Отмена</button>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  return date.toLocaleDateString('ru-RU', options);
+}
+
+function saveDayChanges(dateStr) {
+  let day = findDay(dateStr);
+  if (!day) {
+    day = { date: dateStr, start: '', end: '', tags: [] };
+    days.push(day);
+  }
+  
+  // Сохраняем время прихода/ухода
+  day.start = document.getElementById('editStart').value;
+  day.end = document.getElementById('editEnd').value;
+  
+  // Сохраняем теги
+  if (day.tags) {
+    for (let i = 0; i < day.tags.length; i++) {
+      day.tags[i].start = document.getElementById(`tagStart${i}`).value;
+      day.tags[i].end = document.getElementById(`tagEnd${i}`).value;
+    }
+  }
+  
+  saveAll();
+  showDay(dateStr); // Обновляем view
+}
+
+function addNewTagToDay(dateStr) {
+  let day = findDay(dateStr);
+  if (!day) {
+    day = { date: dateStr, start: '', end: '', tags: [] };
+    days.push(day);
+  }
+  
+  if (!day.tags) day.tags = [];
+  day.tags.push({ tag: DEFAULT_TAG, start: "09:00", end: "18:00" });
+  
+  saveAll();
+  showDay(dateStr); // Перезагружаем view
+}
+
+function removeTagFromDay(dateStr, index) {
+  let day = findDay(dateStr);
+  if (day && day.tags && day.tags[index]) {
+    day.tags.splice(index, 1);
+    saveAll();
+    showDay(dateStr);
+  }
+}
+
+/** === EXPORT, SETTINGS, ABOUT и Прочее UI === */
+
+// --- Экспорт ---
+function downloadText() {
+  let b = new Blob([window.export__text || ""], { type:"text/plain" });
+  let link = document.createElement("a");
+  link.href = URL.createObjectURL(b);
+  link.download = "work_report.txt";
+  link.click();
+}
+
+// ...Функция showExport уже дана ранее, останется рядом...
+
+// --- Настройки ---
+function showSettings() {
+  let html = `
+    <b>Настройки</b>
+    <ul class="tags-list">
+      <li>
+        <label>
+          <input type="checkbox" id="setCopyProtect" ${appSettings.copyProtect ? "checked" : ""}>
+          🛡️ Запретить копирование текста
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="checkbox" id="setNoZoom" ${appSettings.noZoom ? "checked" : ""}>
+          🔒 Запретить масштабирование страницы
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="checkbox" id="setAutoTheme" ${appSettings.autoTheme ? "checked" : ""}>
+          🌓 Подхватывать тему с устройства
+        </label>
+      </li>
+      <li>
+        <label>
+          🎨 Темная тема:
+          <select id="setTheme" ${appSettings.autoTheme ? "disabled" : ""}>
+            <option value="light" ${appSettings.theme === "light" ? "selected" : ""}>Светлая</option>
+            <option value="dark" ${appSettings.theme === "dark" ? "selected" : ""}>Темная</option>
+          </select>
+        </label>
+      </li>
+      <li><hr></li>
+      <li><b>Мои теги:</b></li>
+      ${tagsLib.map((t, i) => `
+        <li style="margin-bottom:6px;">
+          <span class="badge">${t}</span>
+          ${i === 0
+            ? '<span class="small">(обязательный)</span>'
+            : `<button class="edit" onclick="removeTagLib(${i})">✕ удалить</button>`}
+        </li>
+      `).join("")}
+      <li>
+        <input type="text" id="newTgInp" placeholder="Новый тег...">
+        <button class="btn" onclick="addTagFromSettings()">Добавить</button>
+      </li>
+      <li>
+        <button class="btn" onclick="resetAllData()">Сбросить все данные</button>
+        <span class="small">(безвозвратно)</span>
+      </li>
+    </ul>
+    <button class="btn btn-close fullw" onclick="closeModal()">Закрыть</button>
+  `;
+  showModal(html);
+
+  // --- обработчики переключателей ---
+  document.getElementById('setCopyProtect').onchange = function() {
+    appSettings.copyProtect = this.checked; saveSettings(); updateCopyProtect();
+  };
+  document.getElementById('setNoZoom').onchange = function() {
+    appSettings.noZoom = this.checked; saveSettings(); updateNoZoom();
+  };
+  document.getElementById('setAutoTheme').onchange = function() {
+    appSettings.autoTheme = this.checked; saveSettings();
+    document.getElementById('setTheme').disabled = appSettings.autoTheme;
+    updateTheme();
+  };
+  document.getElementById('setTheme').onchange = function() {
+    appSettings.theme = this.value; saveSettings(); updateTheme();
+  };
+}
+function addTagFromSettings() {
+  let inp = document.getElementById('newTgInp');
+  let newTag = inp.value.trim();
+  if(!newTag) return;
+  if(!tagsLib.includes(newTag)) {
+    tagsLib.push(newTag);
+    saveAll();
+    closeModal();
+    renderApp();
+  }
+}
+function removeTagLib(i) {
+  if (i === 0) return; // нельзя удалять основной тег
+  if (confirm(`Удалить тег "${tagsLib[i]}"? Все записи с этим тегом сохранятся, но новый добавить не получится.`)) {
+    tagsLib.splice(i, 1);
+    saveAll();
+    showSettings();
+    renderApp();
+  }
+}
+function resetAllData() {
+  if(confirm("Удалить все данные?")) {
+    days = [];
+    tagsLib = [DEFAULT_TAG];
+    saveAll();
+    closeModal();
+    renderApp();
+  }
+}
+
+// --- About ---
+function showAbout() {
+  let html = `
+    <b>О приложении</b><br>
+    <div class="small" style="line-height:1.7;">
+      <b>Автор идеи:</b> Антон Магомедов<br>
+      <b>Telegram / Instagram:</b> <a href="https://t.me/xcve33" target="_blank">@xcve33</a><br>
+      <b>Email:</b> <a href="mailto:akitsatnafiya@gmail.com">akitsatnafiya@gmail.com</a><br>
+      <b>GitHub:</b> <a href="https://github.com/sunpole" target="_blank">sunpole</a><br>
+      <br>
+      <b>Разработка кода:</b><br>
+      Программный код создан с помощью искусственного интеллекта — чат-ассистента <a href="https://www.sider.ai/" target="_blank">sider.ai</a>, на основе серии промтов и требований от автора.<br>
+      Минимальное ручное редактирование — честно и ради эксперимента с AI.<br>
+      <br>
+      <b>Версия:</b> ${APP_VERSION}<br>
+      <b>Назначение:</b><br>
+      Трекер учёта времени — для ежедневной фиксации прихода, ухода и видов деятельности по тегам.<br>
+      <br>
+      <b>Особенности:</b><br>
+      — Все данные хранятся только на вашем устройстве (LocalStorage браузера)<br>
+      — Не требует регистрации и интернета<br>
+      — Можно экспортировать отчёты в текст для пересылки<br>
+      <br>
+      <b>Всегда открыт для контакта и сотрудничества.</b><br>
+      Любая ваша поддержка, отзыв или предложение очень ценны для меня.<br>
+      <br>
+      <button class="btn btn-close" style="font-size:0.98em;white-space:normal;line-height:1.1;padding:0.7em 1em;" onclick="closeModal()">Спасибо за ваше внимание</button>
+    </div>
+  `;
+  showModal(html);
+}
+
+  
+/** === MODAL CORE === */
+function showModal(html) {
+  let m = document.getElementById("modal");
+  m.innerHTML = `<div class="modal" onclick="closeModal(event)">
+    <div class="modal-inner" onclick="event.stopPropagation()">${html}</div>
+  </div>`;
+  m.style.display = '';
+}
+function closeModal(e) {
+  if(e && e.target!==document.getElementById("modal"))return;
+  document.getElementById("modal").style.display='none';
+}
+
+// == Запуск приложения ==
+renderApp();
+</script>
+
+  
+</body>
+</html>
